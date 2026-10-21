@@ -40,6 +40,49 @@ packages/parsers/     # SMS/email heuristics (shared)
 
 API health: `GET http://localhost:8000/health`
 
+### Mail connectors (Phase 2 — stub OAuth + IMAP)
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/mail/accounts` | List connected mail accounts |
+| `POST` | `/mail/accounts/connect/gmail` | Start Gmail OAuth (returns authorization URL) |
+| `POST` | `/mail/accounts/connect/outlook` | Start Microsoft OAuth (returns authorization URL) |
+| `POST` | `/mail/accounts/connect/imap` | Connect IMAP (host, username, app password) |
+| `GET` | `/mail/accounts/oauth/callback/gmail` | OAuth redirect handler (stub token exchange) |
+| `GET` | `/mail/accounts/oauth/callback/outlook` | OAuth redirect handler (stub token exchange) |
+| `DELETE` | `/mail/accounts/{id}` | Disconnect account |
+| `POST` | `/mail/accounts/{id}/sync` | Trigger connector sync for one account |
+| `GET` | `/mail/messages` | Unified inbox metadata |
+| `GET` | `/mail/messages/{id}` | Message detail (read-only) |
+
+Apply DB stub: `services/api/migrations/001_connected_accounts_messages.sql` (Postgres).
+
+Worker job: `sync_mail_account` in `services/workers/worker/jobs/sync_mail_account.py`.
+
+Flutter: **Mail inbox** from home → list, detail, **Connect account** (Gmail / Outlook / IMAP). Pass JWT:
+
+```bash
+flutter run --dart-define=ACCESS_TOKEN=<jwt-from-/auth/login>
+```
+
+#### Google Cloud (Gmail OAuth) — placeholders
+
+1. [Google Cloud Console](https://console.cloud.google.com/) → create project → **APIs & Services** → enable **Gmail API**.
+2. **OAuth consent screen** — External (or Internal for Workspace), add scopes `gmail.readonly`, `openid`, `email`.
+3. **Credentials** → **OAuth client ID** → type **Web application** (API callback) and **iOS/Android** (mobile, later).
+4. Authorized redirect URI: `GOOGLE_REDIRECT_URI` (e.g. `http://localhost:8000/mail/accounts/oauth/callback/gmail` for dev).
+5. Copy **Client ID** and **Client secret** into `.env` as `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`.
+
+#### Microsoft Entra (Outlook OAuth) — placeholders
+
+1. [Microsoft Entra admin center](https://entra.microsoft.com/) → **App registrations** → **New registration**.
+2. Redirect URI (Web): `MICROSOFT_REDIRECT_URI` (e.g. `http://localhost:8000/mail/accounts/oauth/callback/outlook`).
+3. **Certificates & secrets** → new client secret → `MICROSOFT_CLIENT_SECRET`.
+4. **API permissions** → Microsoft Graph delegated → `Mail.Read`, `offline_access`, `openid`, `email`.
+5. Application (client) ID → `MICROSOFT_CLIENT_ID`.
+
+Production: use HTTPS redirect URIs on your Hetzner domain; store secrets in `.env` with `chmod 600`.
+
 ### Recording API (stub)
 
 | Method | Path | Purpose |

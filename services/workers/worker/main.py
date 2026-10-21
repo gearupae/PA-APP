@@ -12,7 +12,7 @@ log = logging.getLogger("pa-app-worker")
 def main() -> None:
     log.info("PA-APP worker started (stub). redis=%s", settings.redis_url)
     while True:
-        # TODO: BRPOP from queue, dispatch process_recording and mail sync jobs
+        # TODO: BRPOP from queue, dispatch process_recording and sync_mail_account jobs
         time.sleep(60)
 
 
