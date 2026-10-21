@@ -1,0 +1,8 @@
+[project]
+name = "pa-app-parsers"
+version = "0.1.0"
+description = "PA-APP shared parsing heuristics"
+requires-python = ">=3.12"
+
+[tool.setuptools.packages.find]
+where = ["src"]
