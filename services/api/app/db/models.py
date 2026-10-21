@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, String, Text, func
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, String, Text, func
 from sqlalchemy.dialects.postgresql import ARRAY, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -56,10 +56,79 @@ class Message(Base):
     received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     labels: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
     is_read: Mapped[bool] = mapped_column(default=False, nullable=False)
+    importance_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    is_important: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    importance_flags: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
     account: Mapped["ConnectedAccount"] = relationship(
         "ConnectedAccount", back_populates="messages"
+    )
+
+
+class DetectedSubscription(Base):
+    """Mail-derived subscription / renewal candidate awaiting user confirmation."""
+
+    __tablename__ = "detected_subscriptions"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    user_id: Mapped[str] = mapped_column(String(320), index=True, nullable=False)
+    message_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("messages.id", ondelete="SET NULL"), nullable=True
+    )
+    kind: Mapped[str] = mapped_column(String(64), nullable=False)
+    title: Mapped[str] = mapped_column(String(1024), nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, default=0.5, nullable=False)
+    suggested_due_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    snippet_hint: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(32), default="pending", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+
+class Reminder(Base):
+    """Scheduled reminder linked to notification preferences (push/local stub)."""
+
+    __tablename__ = "reminders"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    user_id: Mapped[str] = mapped_column(String(320), index=True, nullable=False)
+    title: Mapped[str] = mapped_column(String(1024), nullable=False)
+    due_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    source_detected_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("detected_subscriptions.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    source_message_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("messages.id", ondelete="SET NULL"), nullable=True
+    )
+    notify_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    notification_channel: Mapped[str] = mapped_column(
+        String(32), default="push", nullable=False
+    )
+    status: Mapped[str] = mapped_column(String(32), default="scheduled", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
     )

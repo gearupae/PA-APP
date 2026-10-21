@@ -49,6 +49,9 @@ class MailMessage {
     this.labels = const [],
     this.isRead = false,
     this.bodyText,
+    this.importanceScore,
+    this.isImportant = false,
+    this.importanceFlags = const [],
   });
 
   factory MailMessage.fromJson(Map<String, dynamic> json) {
@@ -66,6 +69,12 @@ class MailMessage {
           const [],
       isRead: json['is_read'] as bool? ?? false,
       bodyText: json['body_text'] as String?,
+      importanceScore: (json['importance_score'] as num?)?.toDouble(),
+      isImportant: json['is_important'] as bool? ?? false,
+      importanceFlags: (json['importance_flags'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
     );
   }
 
@@ -79,6 +88,9 @@ class MailMessage {
   final List<String> labels;
   final bool isRead;
   final String? bodyText;
+  final double? importanceScore;
+  final bool isImportant;
+  final List<String> importanceFlags;
 }
 
 class OAuthConnectResult {
@@ -182,9 +194,12 @@ class MailApi {
     }
   }
 
-  Future<List<MailMessage>> listMessages() async {
+  Future<List<MailMessage>> listMessages({bool importantOnly = false}) async {
+    final uri = Uri.parse('${ApiConfig.baseUrl}/mail/messages').replace(
+      queryParameters: importantOnly ? {'important': 'true'} : null,
+    );
     final res = await _client.get(
-      Uri.parse('${ApiConfig.baseUrl}/mail/messages'),
+      uri,
       headers: _headers,
     );
     _ensureOk(res);

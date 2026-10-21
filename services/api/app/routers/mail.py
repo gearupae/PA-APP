@@ -19,6 +19,14 @@ from app.schemas.mail import (
     MessageOut,
     OAuthConnectResponse,
 )
+from app.schemas.signals import (
+    DetectedSubscriptionKind,
+    DetectedSubscriptionOut,
+    DetectedSubscriptionStatus,
+    DetectedSubscriptionUpdate,
+)
+from app.services.mail_signals import process_messages_for_user
+from app.stores import signals as signal_store
 
 router = APIRouter(prefix="/mail", tags=["mail"])
 
@@ -36,9 +44,31 @@ def _provider_sync(provider: MailProvider, account_id: str) -> list[MessageOut]:
     return imap_sync(account_id)
 
 
-def _upsert_messages(account_id: str, provider: MailProvider, rows: list[MessageOut]) -> None:
+def _message_to_out(m: dict) -> MessageOut:
+    return MessageOut(
+        id=m["id"],
+        account_id=m["account_id"],
+        provider=MailProvider(m["provider"]),
+        from_address=m["from_address"],
+        subject=m["subject"],
+        snippet=m["snippet"],
+        received_at=m["received_at"],
+        labels=m.get("labels") or [],
+        is_read=m.get("is_read", False),
+        importance_score=m.get("importance_score"),
+        is_important=m.get("is_important", False),
+        importance_flags=m.get("importance_flags") or [],
+    )
+
+
+def _upsert_messages(
+    account_id: str, provider: MailProvider, rows: list[MessageOut]
+) -> list[str]:
+    new_ids: list[str] = []
     for row in rows:
         mid = row.id if row.id else str(uuid4())
+        if mid not in _messages:
+            new_ids.append(mid)
         _messages[mid] = {
             "id": mid,
             "account_id": account_id,
@@ -50,7 +80,23 @@ def _upsert_messages(account_id: str, provider: MailProvider, rows: list[Message
             "received_at": row.received_at,
             "labels": row.labels,
             "is_read": row.is_read,
+            "importance_score": row.importance_score,
+            "is_important": row.is_important,
+            "importance_flags": row.importance_flags,
         }
+    return new_ids
+
+
+def _run_mail_signal_extractors(user_id: str, account_id: str, new_message_ids: list[str]) -> None:
+    if not new_message_ids:
+        return
+    process_messages_for_user(
+        user_id=user_id,
+        messages=_messages,
+        account_ids={account_id},
+        detected_subscriptions=signal_store.detected_subscriptions,
+        existing_message_ids=set(new_message_ids),
+    )
 
 
 def _oauth_authorization_url(provider: MailProvider, state: str) -> str:
@@ -133,7 +179,8 @@ async def connect_imap(
     }
     _accounts[account_id] = row
     synced = imap_sync(account_id)
-    _upsert_messages(account_id, MailProvider.imap, synced)
+    new_ids = _upsert_messages(account_id, MailProvider.imap, synced)
+    _run_mail_signal_extractors(user, account_id, new_ids)
     return ConnectedAccountOut(
         id=account_id,
         provider=MailProvider.imap,
@@ -164,7 +211,8 @@ async def _complete_oauth_stub(
     }
     _accounts[account_id] = row
     synced = _provider_sync(provider, account_id)
-    _upsert_messages(account_id, provider, synced)
+    new_ids = _upsert_messages(account_id, provider, synced)
+    _run_mail_signal_extractors(user, account_id, new_ids)
     return ConnectedAccountOut(
         id=account_id,
         provider=provider,
@@ -223,29 +271,63 @@ async def sync_account_now(
         raise HTTPException(status_code=404, detail="Account not found")
     provider = MailProvider(row["provider"])
     synced = _provider_sync(provider, account_id)
-    _upsert_messages(account_id, provider, synced)
+    new_ids = _upsert_messages(account_id, provider, synced)
+    _run_mail_signal_extractors(user, account_id, new_ids)
     return synced
 
 
 @router.get("/messages", response_model=list[MessageOut])
-async def list_messages(user: Annotated[str, Depends(get_current_user)]):
+async def list_messages(
+    user: Annotated[str, Depends(get_current_user)],
+    important: bool | None = Query(default=None),
+):
     account_ids = {a["id"] for a in _user_accounts(user)}
     rows = [m for m in _messages.values() if m["account_id"] in account_ids]
+    if important is True:
+        rows = [m for m in rows if m.get("is_important")]
     rows.sort(key=lambda m: m["received_at"], reverse=True)
-    return [
-        MessageOut(
-            id=m["id"],
-            account_id=m["account_id"],
-            provider=MailProvider(m["provider"]),
-            from_address=m["from_address"],
-            subject=m["subject"],
-            snippet=m["snippet"],
-            received_at=m["received_at"],
-            labels=m.get("labels") or [],
-            is_read=m.get("is_read", False),
-        )
-        for m in rows
+    return [_message_to_out(m) for m in rows]
+
+
+def _detected_to_out(row: dict) -> DetectedSubscriptionOut:
+    return DetectedSubscriptionOut(
+        id=row["id"],
+        message_id=row.get("message_id"),
+        kind=DetectedSubscriptionKind(row["kind"]),
+        title=row["title"],
+        confidence=row["confidence"],
+        suggested_due_at=row.get("suggested_due_at"),
+        snippet_hint=row.get("snippet_hint"),
+        status=DetectedSubscriptionStatus(row.get("status", "pending")),
+        created_at=row["created_at"],
+    )
+
+
+@router.get("/subscriptions", response_model=list[DetectedSubscriptionOut])
+async def list_detected_subscriptions(
+    user: Annotated[str, Depends(get_current_user)],
+    status: DetectedSubscriptionStatus | None = None,
+):
+    rows = [
+        d for d in signal_store.detected_subscriptions.values() if d["user_id"] == user
     ]
+    if status is not None:
+        rows = [d for d in rows if d.get("status") == status.value]
+    rows.sort(key=lambda d: d["created_at"], reverse=True)
+    return [_detected_to_out(d) for d in rows]
+
+
+@router.patch("/subscriptions/{detected_id}", response_model=DetectedSubscriptionOut)
+async def update_detected_subscription(
+    detected_id: str,
+    body: DetectedSubscriptionUpdate,
+    user: Annotated[str, Depends(get_current_user)],
+):
+    row = signal_store.detected_subscriptions.get(detected_id)
+    if not row or row["user_id"] != user:
+        raise HTTPException(status_code=404, detail="Detected subscription not found")
+    row["status"] = body.status.value
+    return _detected_to_out(row)
 
 
 @router.get("/messages/{message_id}", response_model=MessageDetailOut)
@@ -260,15 +342,5 @@ async def get_message(
     if not account or account["user_id"] != user:
         raise HTTPException(status_code=404, detail="Message not found")
     body = msg.get("body_text") or msg["snippet"]
-    return MessageDetailOut(
-        id=msg["id"],
-        account_id=msg["account_id"],
-        provider=MailProvider(msg["provider"]),
-        from_address=msg["from_address"],
-        subject=msg["subject"],
-        snippet=msg["snippet"],
-        received_at=msg["received_at"],
-        labels=msg.get("labels") or [],
-        is_read=msg.get("is_read", False),
-        body_text=body,
-    )
+    base = _message_to_out(msg)
+    return MessageDetailOut(**base.model_dump(), body_text=body)

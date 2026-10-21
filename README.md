@@ -57,7 +57,29 @@ API health: `GET http://localhost:8000/health`
 
 Apply DB stub: `services/api/migrations/001_connected_accounts_messages.sql` (Postgres).
 
-Worker job: `sync_mail_account` in `services/workers/worker/jobs/sync_mail_account.py`.
+Worker jobs: `sync_mail_account`, `process_mail_signals` in `services/workers/worker/jobs/`.
+
+### Mail signals (Phase 3 — importance, subscriptions, reminders)
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/mail/messages?important=true` | Important-only inbox (heuristic v1) |
+| `GET` | `/mail/subscriptions` | Detected subscription/renewal candidates (`?status=pending`) |
+| `PATCH` | `/mail/subscriptions/{id}` | Confirm or dismiss detection |
+| `GET` | `/reminders` | List scheduled reminders |
+| `POST` | `/reminders` | Create reminder |
+| `GET` | `/reminders/{id}` | Reminder detail |
+| `PATCH` | `/reminders/{id}` | Update reminder |
+| `DELETE` | `/reminders/{id}` | Delete reminder |
+| `POST` | `/reminders/from-detected/{id}` | Create reminder from detected subscription |
+
+Extractors: `packages/parsers/src/parsers/importance.py`, `subscriptions.py` (keyword/sender heuristics).
+
+Apply DB stub: `services/api/migrations/002_reminders_subscriptions_signals.sql`.
+
+After mail sync, the API runs extractors inline; the worker job `process_mail_signals` mirrors the same logic for queue-driven sync.
+
+Flutter: **Important mail**, **Subscriptions** (confirm/dismiss → reminder), **Reminders** from home, plus Phase 2 inbox.
 
 Flutter: **Mail inbox** from home → list, detail, **Connect account** (Gmail / Outlook / IMAP). Pass JWT:
 

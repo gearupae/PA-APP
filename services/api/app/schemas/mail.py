@@ -41,6 +41,9 @@ class MessageOut(BaseModel):
     received_at: datetime
     labels: list[str] = Field(default_factory=list)
     is_read: bool = False
+    importance_score: float | None = None
+    is_important: bool = False
+    importance_flags: list[str] = Field(default_factory=list)
 
 
 class MessageDetailOut(MessageOut):

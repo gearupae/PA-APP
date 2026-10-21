@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
+import 'important_inbox_screen.dart';
 import 'inbox_screen.dart';
 import 'record_screen.dart';
+import 'reminders_screen.dart';
+import 'subscriptions_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -26,6 +29,42 @@ class HomeScreen extends StatelessWidget {
               },
               icon: const Icon(Icons.inbox),
               label: const Text('Mail inbox'),
+            ),
+            const SizedBox(height: 12),
+            FilledButton.tonalIcon(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const ImportantInboxScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.priority_high),
+              label: const Text('Important mail'),
+            ),
+            const SizedBox(height: 12),
+            FilledButton.tonalIcon(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const SubscriptionsScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.subscriptions_outlined),
+              label: const Text('Subscriptions'),
+            ),
+            const SizedBox(height: 12),
+            FilledButton.tonalIcon(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const RemindersScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.alarm),
+              label: const Text('Reminders'),
             ),
             const SizedBox(height: 12),
             FilledButton.icon(
