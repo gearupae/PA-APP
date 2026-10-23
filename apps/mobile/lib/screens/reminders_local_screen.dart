@@ -14,16 +14,22 @@ class RemindersLocalScreen extends StatelessWidget {
     return ListenableBuilder(
       listenable: state,
       builder: (context, _) {
-        final pending = state.reminders.where((r) => !r.done).toList();
-        final done = state.reminders.where((r) => r.done).toList();
+        final all = state.allReminders;
+        final pending = all.where((r) => !r.done).toList();
+        final done = all.where((r) => r.done).toList();
         return Scaffold(
           appBar: AppBar(title: const Text('Reminders')),
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: () => _add(context),
-            icon: const Icon(Icons.add_alarm),
-            label: const Text('New'),
+          floatingActionButton: Padding(
+            padding: const EdgeInsets.only(bottom: 72),
+            child: FloatingActionButton.extended(
+              backgroundColor: AppColors.ink,
+              foregroundColor: Colors.white,
+              onPressed: () => _add(context),
+              icon: const Icon(Icons.add_alarm),
+              label: const Text('New'),
+            ),
           ),
-          body: state.reminders.isEmpty
+          body: all.isEmpty
               ? _empty()
               : ListView(
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 90),
@@ -122,11 +128,31 @@ class RemindersLocalScreen extends StatelessWidget {
               color: r.done ? AppColors.slate : null,
             ),
           ),
-          subtitle: Text(
-            dayMonthTime(r.dueAt),
-            style: TextStyle(
-                color: overdue ? AppColors.expense : AppColors.slate,
-                fontWeight: overdue ? FontWeight.w600 : null),
+          subtitle: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  dayMonthTime(r.dueAt),
+                  style: TextStyle(
+                      color: overdue ? AppColors.expense : AppColors.slate,
+                      fontWeight: overdue ? FontWeight.w600 : null),
+                ),
+              ),
+              if (r.id.startsWith('auto_')) ...[
+                const SizedBox(width: 6),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.tag,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text('from SMS',
+                      style:
+                          TextStyle(fontSize: 10, color: AppColors.slate)),
+                ),
+              ],
+            ],
           ),
           trailing: Checkbox(
             value: r.done,

@@ -61,6 +61,26 @@ class LocalStore {
   Future<void> saveManualTxns(List<Txn> items) => _prefs.setString(
       'manualTxns', jsonEncode(items.map((t) => t.toJson()).toList()));
 
+  // --- auto-reminder state (ids derived from source messages) ---
+  Set<String> _idSet(String key) {
+    final raw = _prefs.getString(key);
+    if (raw == null) return {};
+    return (jsonDecode(raw) as List<dynamic>).map((e) => e as String).toSet();
+  }
+
+  Set<String> get doneAutoReminders => _idSet('doneAutoRem');
+  Future<void> setDoneAutoReminder(String id, bool done) {
+    final s = doneAutoReminders;
+    done ? s.add(id) : s.remove(id);
+    return _prefs.setString('doneAutoRem', jsonEncode(s.toList()));
+  }
+
+  Set<String> get dismissedAutoReminders => _idSet('dismissedAutoRem');
+  Future<void> dismissAutoReminder(String id) {
+    final s = dismissedAutoReminders..add(id);
+    return _prefs.setString('dismissedAutoRem', jsonEncode(s.toList()));
+  }
+
   // --- category overrides keyed by txn id ---
   Map<String, String> get categoryOverrides {
     final raw = _prefs.getString('catOverrides');

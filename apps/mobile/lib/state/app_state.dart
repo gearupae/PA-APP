@@ -4,6 +4,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../models/models.dart';
 import '../services/expense_parser.dart';
 import '../services/local_store.dart';
+import '../services/reminder_extractor.dart';
 import '../services/sms_service.dart';
 
 /// App-wide state: data loading, permissions, derived dashboard figures.
@@ -158,7 +159,35 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ---- reminders ----
+  Future<void> toggleTodo(Note note, Todo todo) async {
+    todo.done = !todo.done;
+    await updateNote(note);
+  }
+
+  // ---- reminders (manual + auto-extracted from SMS) ----
+  bool _isAuto(String id) => id.startsWith('auto_');
+
+  /// Reminders pulled out of SMS, minus any the user dismissed, with the
+  /// stored done-state applied.
+  List<Reminder> get autoReminders {
+    final dismissed = store.dismissedAutoReminders;
+    final done = store.doneAutoReminders;
+    return ReminderExtractor.extract(messages)
+        .where((r) => !dismissed.contains(r.id))
+        .map((r) => r..done = done.contains(r.id))
+        .toList();
+  }
+
+  /// All reminders (manual + auto), sorted by due date.
+  List<Reminder> get allReminders {
+    final list = [...reminders, ...autoReminders]
+      ..sort((a, b) => a.dueAt.compareTo(b.dueAt));
+    return list;
+  }
+
+  List<Reminder> get upcomingReminders =>
+      allReminders.where((r) => !r.done).toList();
+
   Future<void> addReminder(Reminder r) async {
     reminders = [...reminders, r]..sort((a, b) => a.dueAt.compareTo(b.dueAt));
     await store.saveReminders(reminders);
@@ -166,19 +195,36 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> toggleReminder(Reminder r) async {
-    r.done = !r.done;
-    await store.saveReminders(reminders);
+    if (_isAuto(r.id)) {
+      r.done = !r.done;
+      await store.setDoneAutoReminder(r.id, r.done);
+    } else {
+      r.done = !r.done;
+      await store.saveReminders(reminders);
+    }
     notifyListeners();
   }
 
   Future<void> deleteReminder(String id) async {
-    reminders.removeWhere((r) => r.id == id);
-    await store.saveReminders(reminders);
+    if (_isAuto(id)) {
+      await store.dismissAutoReminder(id);
+    } else {
+      reminders.removeWhere((r) => r.id == id);
+      await store.saveReminders(reminders);
+    }
     notifyListeners();
   }
 
-  List<Reminder> get upcomingReminders =>
-      reminders.where((r) => !r.done).toList();
+  // ---- open to-dos across all notes (for the dashboard) ----
+  List<({Note note, Todo todo})> get openTodos {
+    final out = <({Note note, Todo todo})>[];
+    for (final n in notes) {
+      for (final t in n.todos) {
+        if (!t.done) out.add((note: n, todo: t));
+      }
+    }
+    return out;
+  }
 
   // ---- important messages (non-financial, flagged) ----
   static final _importantRe = RegExp(

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../models/models.dart';
 import '../state/app_state.dart';
@@ -8,9 +7,10 @@ import '../util/format.dart';
 import '../widgets/donut_chart.dart';
 
 class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({super.key, required this.state});
+  const DashboardScreen({super.key, required this.state, required this.onRecord});
 
   final AppState state;
+  final VoidCallback onRecord;
 
   @override
   Widget build(BuildContext context) {
@@ -18,73 +18,86 @@ class DashboardScreen extends StatelessWidget {
       listenable: state,
       builder: (context, _) {
         final name = state.store.userName;
-        final month = DateFormat('MMMM').format(DateTime.now());
+        final reminders = state.upcomingReminders;
+        final todos = state.openTodos;
         return Scaffold(
-          body: SafeArea(
-            child: RefreshIndicator(
-              onRefresh: state.refreshSms,
-              child: ListView(
-                padding: AppTheme.pagePad,
-                children: [
-                  _header(name, month),
-                  const SizedBox(height: 16),
-                  if (!state.smsGranted) _smsPrompt(context),
-                  if (!state.smsGranted) const SizedBox(height: 12),
-                  _summaryRow(),
-                  const SizedBox(height: 16),
-                  _spendCard(context),
-                  const SizedBox(height: 16),
-                  _suggestions(),
-                  const SizedBox(height: 16),
-                  _recent(context),
-                  const SizedBox(height: 80),
-                ],
-              ),
-            ),
+          appBar: AppBar(
+            title: Text(name.isEmpty ? 'Good day' : 'Good day, $name'),
           ),
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: () => _addTxn(context),
-            icon: const Icon(Icons.add),
-            label: const Text('Add'),
+          body: RefreshIndicator(
+            onRefresh: state.refreshSms,
+            child: ListView(
+              padding: AppTheme.pagePad,
+              children: [
+                _actionNeeded(reminders.length, todos.length),
+                const SizedBox(height: 16),
+                if (!state.smsGranted) ...[
+                  _smsPrompt(),
+                  const SizedBox(height: 16),
+                ],
+                _remindersSection(reminders),
+                _todosSection(todos),
+                _moneySection(context),
+                _attentionSection(),
+                _suggestions(),
+                const SizedBox(height: 90),
+              ],
+            ),
           ),
         );
       },
     );
   }
 
-  Widget _header(String name, String month) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            name.isEmpty ? 'Hello 👋' : 'Hello, $name 👋',
-            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 4),
-          Text("Here's your $month overview",
-              style: TextStyle(color: AppColors.slate, fontSize: 15)),
-        ],
-      );
-
-  Widget _smsPrompt(BuildContext context) => Container(
-        padding: const EdgeInsets.all(16),
+  // ---- Action needed (black card) ----
+  Widget _actionNeeded(int reminders, int todos) => Container(
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-              colors: [AppColors.seed, AppColors.violet]),
+          color: AppColors.ink,
           borderRadius: BorderRadius.circular(AppTheme.radius),
         ),
         child: Row(
           children: [
-            const Icon(Icons.sms, color: Colors.white),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Action needed',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 4),
+                  Text(
+                    '$reminders reminders · $todos to-dos',
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Colors.white54),
+          ],
+        ),
+      );
+
+  Widget _smsPrompt() => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppTheme.radius),
+          border: Border.all(color: AppColors.tag),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.sms_outlined, color: AppColors.ink),
             const SizedBox(width: 12),
             const Expanded(
               child: Text(
-                'Allow SMS to auto-track your spending from bank messages.',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                'Allow SMS to auto-track spending and pull reminders from your messages.',
+                style: TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
             FilledButton(
-              style: FilledButton.styleFrom(
-                  backgroundColor: Colors.white, foregroundColor: AppColors.seed),
               onPressed: state.requestSmsPermission,
               child: const Text('Allow'),
             ),
@@ -92,100 +105,169 @@ class DashboardScreen extends StatelessWidget {
         ),
       );
 
-  Widget _summaryRow() => Row(
+  // ---- Reminders ----
+  Widget _remindersSection(List<Reminder> reminders) {
+    return _section(
+      'Reminders',
+      Icons.notifications_none,
+      child: reminders.isEmpty
+          ? _emptyLine('No upcoming reminders.')
+          : Column(
+              children: reminders
+                  .take(3)
+                  .map((r) => _reminderTile(r))
+                  .toList(),
+            ),
+    );
+  }
+
+  Widget _reminderTile(Reminder r) {
+    final overdue = r.dueAt.isBefore(DateTime.now());
+    final auto = r.id.startsWith('auto_');
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(
+        r.kind == ReminderKind.payment
+            ? Icons.payments_outlined
+            : r.kind == ReminderKind.meeting
+                ? Icons.groups_outlined
+                : Icons.push_pin_outlined,
+        color: AppColors.ink,
+      ),
+      title: Text(r.title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontWeight: FontWeight.w600)),
+      subtitle: Row(
         children: [
-          _statCard('Spent', state.monthExpense, AppColors.expense,
-              Icons.arrow_upward),
-          const SizedBox(width: 12),
-          _statCard('Earned', state.monthIncome, AppColors.income,
-              Icons.arrow_downward),
-          const SizedBox(width: 12),
-          _statCard('Saved', state.monthSavings, AppColors.seed,
-              Icons.savings_outlined),
+          Text(dayMonth(r.dueAt),
+              style: TextStyle(
+                  color: overdue ? AppColors.expense : AppColors.slate,
+                  fontWeight: overdue ? FontWeight.w700 : null)),
+          if (auto) ...[
+            const SizedBox(width: 6),
+            _miniTag('from SMS'),
+          ],
         ],
-      );
+      ),
+      trailing: Checkbox(
+        value: r.done,
+        onChanged: (_) => state.toggleReminder(r),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+      ),
+    );
+  }
 
-  Widget _statCard(String label, double value, Color color, IconData icon) =>
-      Expanded(
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: color, size: 16),
-              ),
-              const SizedBox(height: 10),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Text(money(value),
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.w800)),
-              ),
-              const SizedBox(height: 2),
-              Text(label,
-                  style: TextStyle(color: AppColors.slate, fontSize: 12)),
-            ],
-          ),
-        ),
-      );
+  // ---- To-dos ----
+  Widget _todosSection(List<({Note note, Todo todo})> todos) {
+    return _section(
+      'To-dos',
+      Icons.checklist,
+      child: todos.isEmpty
+          ? _emptyLine('No open to-dos. Record a voice note to create some.')
+          : Column(
+              children: todos
+                  .take(4)
+                  .map((e) => ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Checkbox(
+                          value: false,
+                          onChanged: (_) =>
+                              state.toggleTodo(e.note, e.todo),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(6)),
+                        ),
+                        title: Text(e.todo.text,
+                            maxLines: 2, overflow: TextOverflow.ellipsis),
+                      ))
+                  .toList(),
+            ),
+    );
+  }
 
-  Widget _spendCard(BuildContext context) {
+  // ---- Money metrics ----
+  Widget _moneySection(BuildContext context) {
     final breakdown = state.categoryBreakdown;
     final slices = breakdown
         .take(6)
         .map((e) => DonutSlice(e.key, e.value, AppColors.forCategory(e.key)))
         .toList();
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Spending by category',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 16),
-            if (breakdown.isEmpty)
-              _empty('No expenses detected this month yet.')
-            else
-              Row(
-                children: [
-                  DonutChart(
-                    slices: slices,
-                    centerTop: 'Spent',
-                    centerBottom: money(state.monthExpense),
+    return _section(
+      'This month',
+      Icons.account_balance_wallet_outlined,
+      trailing: GestureDetector(
+        onTap: () => _addTxn(context),
+        child: const Text('+ Add',
+            style: TextStyle(
+                color: AppColors.seed, fontWeight: FontWeight.w700)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              _stat('Spent', state.monthExpense, AppColors.expense),
+              const SizedBox(width: 10),
+              _stat('Earned', state.monthIncome, AppColors.income),
+              const SizedBox(width: 10),
+              _stat('Saved', state.monthSavings, AppColors.ink),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (breakdown.isEmpty)
+            _emptyLine('Spending by category will appear from your SMS.')
+          else
+            Row(
+              children: [
+                DonutChart(
+                  slices: slices,
+                  centerTop: 'Spent',
+                  centerBottom: money(state.monthExpense),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    children: breakdown
+                        .take(6)
+                        .map((e) => _legend(e.key, e.value))
+                        .toList(),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: breakdown
-                          .take(6)
-                          .map((e) => _legend(e.key, e.value))
-                          .toList(),
-                    ),
-                  ),
-                ],
-              ),
-          ],
-        ),
+                ),
+              ],
+            ),
+        ],
       ),
     );
   }
 
+  Widget _stat(String label, double value, Color color) => Expanded(
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppColors.bg,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label,
+                  style: TextStyle(color: AppColors.slate, fontSize: 12)),
+              const SizedBox(height: 4),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(money(value),
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: color)),
+              ),
+            ],
+          ),
+        ),
+      );
+
   Widget _legend(String cat, double value) => Padding(
-        padding: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.only(bottom: 9),
         child: Row(
           children: [
             Container(
@@ -197,32 +279,45 @@ class DashboardScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Expanded(
-                child: Text(cat, style: const TextStyle(fontSize: 13))),
+            Expanded(child: Text(cat, style: const TextStyle(fontSize: 13))),
             Text(money(value),
-                style: const TextStyle(
-                    fontSize: 13, fontWeight: FontWeight.w700)),
+                style:
+                    const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
           ],
         ),
       );
 
-  Widget _suggestions() => Card(
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: const [
-                  Icon(Icons.lightbulb_outline, color: AppColors.amber),
-                  SizedBox(width: 8),
-                  Text('Smart suggestions',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                ],
-              ),
-              const SizedBox(height: 12),
-              ...state.suggestions.map((s) => Padding(
+  // ---- Needs attention (important messages) ----
+  Widget _attentionSection() {
+    final important = state.importantMessages.take(3).toList();
+    if (important.isEmpty) return const SizedBox.shrink();
+    return _section(
+      'Needs attention',
+      Icons.priority_high,
+      child: Column(
+        children: important
+            .map((m) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.mark_email_unread_outlined,
+                      color: AppColors.amber),
+                  title: Text(m.address.isEmpty ? 'Message' : m.address,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: Text(m.body,
+                      maxLines: 2, overflow: TextOverflow.ellipsis),
+                ))
+            .toList(),
+      ),
+    );
+  }
+
+  Widget _suggestions() => _section(
+        'Suggestions',
+        Icons.lightbulb_outline,
+        child: Column(
+          children: state.suggestions
+              .map((s) => Padding(
                     padding: const EdgeInsets.only(bottom: 10),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -232,130 +327,60 @@ class DashboardScreen extends StatelessWidget {
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.amber)),
                         Expanded(
-                            child: Text(s,
-                                style: const TextStyle(height: 1.4))),
+                            child:
+                                Text(s, style: const TextStyle(height: 1.4))),
                       ],
                     ),
-                  )),
+                  ))
+              .toList(),
+        ),
+      );
+
+  // ---- helpers ----
+  Widget _section(String title, IconData icon,
+      {required Widget child, Widget? trailing}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(icon, size: 20, color: AppColors.ink),
+                  const SizedBox(width: 8),
+                  Text(title,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w700)),
+                  const Spacer(),
+                  if (trailing != null) trailing,
+                ],
+              ),
+              const SizedBox(height: 8),
+              child,
             ],
           ),
         ),
-      );
-
-  Widget _recent(BuildContext context) {
-    final recent = state.monthTxns.take(8).toList();
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Recent transactions',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 8),
-            if (recent.isEmpty)
-              _empty('Transactions from bank SMS will appear here.')
-            else
-              ...recent.map((t) => _txnTile(context, t)),
-          ],
-        ),
       ),
     );
   }
 
-  Widget _txnTile(BuildContext context, Txn t) => ListTile(
-        contentPadding: EdgeInsets.zero,
-        onTap: () => _recategorise(context, t),
-        leading: CircleAvatar(
-          backgroundColor:
-              AppColors.forCategory(t.category).withValues(alpha: 0.15),
-          child: Icon(_iconFor(t.category),
-              color: AppColors.forCategory(t.category), size: 20),
-        ),
-        title: Text(t.merchant,
-            maxLines: 1, overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text('${t.category} · ${timeAgo(t.date)}'),
-        trailing: Text(
-          '${t.isIncome ? '+' : '-'}${money(t.amount)}',
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            color: t.isIncome ? AppColors.income : const Color(0xFF1A1D29),
-          ),
-        ),
+  Widget _emptyLine(String text) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Text(text, style: TextStyle(color: AppColors.slate)),
       );
 
-  IconData _iconFor(String c) {
-    switch (c) {
-      case 'Food':
-        return Icons.restaurant;
-      case 'Fuel':
-        return Icons.local_gas_station;
-      case 'Groceries':
-        return Icons.shopping_basket;
-      case 'Shopping':
-        return Icons.shopping_bag;
-      case 'Bills':
-        return Icons.receipt_long;
-      case 'Transport':
-        return Icons.directions_car;
-      case 'Entertainment':
-        return Icons.movie_outlined;
-      case 'Health':
-        return Icons.favorite_border;
-      case 'Income':
-        return Icons.payments_outlined;
-      case 'Transfers':
-        return Icons.swap_horiz;
-      default:
-        return Icons.category_outlined;
-    }
-  }
-
-  Widget _empty(String text) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 18),
-        child: Center(
-          child: Text(text,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.slate)),
+  Widget _miniTag(String text) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: AppColors.tag,
+          borderRadius: BorderRadius.circular(6),
         ),
+        child: Text(text,
+            style: const TextStyle(fontSize: 10, color: AppColors.slate)),
       );
-
-  void _recategorise(BuildContext context, Txn t) {
-    final cats = AppColors.categoryColors.keys.toList();
-    showModalBottomSheet<void>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text('Categorise "${t.merchant}"',
-                  style: const TextStyle(fontWeight: FontWeight.w700)),
-            ),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: cats
-                  .map((c) => ChoiceChip(
-                        label: Text(c),
-                        selected: t.category == c,
-                        onSelected: (_) {
-                          state.setCategory(t, c);
-                          Navigator.pop(context);
-                        },
-                      ))
-                  .toList(),
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _addTxn(BuildContext context) {
     final amountC = TextEditingController();
@@ -385,17 +410,28 @@ class DashboardScreen extends StatelessWidget {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  _typeChip('Expense', !isIncome,
-                      () => setM(() => isIncome = false)),
+                  ChoiceChip(
+                    label: const Text('Expense'),
+                    selected: !isIncome,
+                    labelStyle: TextStyle(
+                        color: !isIncome ? Colors.white : AppColors.ink),
+                    onSelected: (_) => setM(() => isIncome = false),
+                  ),
                   const SizedBox(width: 8),
-                  _typeChip(
-                      'Income', isIncome, () => setM(() => isIncome = true)),
+                  ChoiceChip(
+                    label: const Text('Income'),
+                    selected: isIncome,
+                    labelStyle: TextStyle(
+                        color: isIncome ? Colors.white : AppColors.ink),
+                    onSelected: (_) => setM(() => isIncome = true),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: amountC,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
                 decoration: const InputDecoration(
                     labelText: 'Amount', prefixIcon: Icon(Icons.numbers)),
               ),
@@ -416,6 +452,10 @@ class DashboardScreen extends StatelessWidget {
                       .map((c) => ChoiceChip(
                             label: Text(c),
                             selected: category == c,
+                            labelStyle: TextStyle(
+                                color: category == c
+                                    ? Colors.white
+                                    : AppColors.ink),
                             onSelected: (_) => setM(() => category = c),
                           ))
                       .toList(),
@@ -449,11 +489,4 @@ class DashboardScreen extends StatelessWidget {
       ),
     );
   }
-
-  Widget _typeChip(String label, bool selected, VoidCallback onTap) =>
-      ChoiceChip(
-        label: Text(label),
-        selected: selected,
-        onSelected: (_) => onTap(),
-      );
 }
