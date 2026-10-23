@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/models.dart';
+import '../services/dues_extractor.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../util/format.dart';
@@ -35,10 +36,10 @@ class DashboardScreen extends StatelessWidget {
                   _smsPrompt(),
                   const SizedBox(height: 16),
                 ],
+                _duesSection(),
                 _remindersSection(reminders),
                 _todosSection(todos),
                 _moneySection(context),
-                _attentionSection(),
                 _suggestions(),
                 const SizedBox(height: 90),
               ],
@@ -287,27 +288,61 @@ class DashboardScreen extends StatelessWidget {
         ),
       );
 
-  // ---- Needs attention (important messages) ----
-  Widget _attentionSection() {
-    final important = state.importantMessages.take(3).toList();
-    if (important.isEmpty) return const SizedBox.shrink();
+  // ---- Dues (summarised, not raw messages) ----
+  Widget _duesSection() {
+    final dues = state.dues.take(4).toList();
+    if (dues.isEmpty) return const SizedBox.shrink();
     return _section(
-      'Needs attention',
-      Icons.priority_high,
+      'Dues',
+      Icons.event_available_outlined,
       child: Column(
-        children: important
-            .map((m) => ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.mark_email_unread_outlined,
-                      color: AppColors.amber),
-                  title: Text(m.address.isEmpty ? 'Message' : m.address,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w600)),
-                  subtitle: Text(m.body,
-                      maxLines: 2, overflow: TextOverflow.ellipsis),
-                ))
-            .toList(),
+        children: dues.map(_dueTile).toList(),
+      ),
+    );
+  }
+
+  Widget _dueTile(Due d) {
+    final overdue = d.dueAt.isBefore(DateTime.now());
+    final amount = d.currency.isEmpty
+        ? money(d.amount)
+        : '${d.currency} ${money(d.amount)}';
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Icon(Icons.payments_outlined,
+              color: overdue ? AppColors.expense : AppColors.ink, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(amount,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w800, fontSize: 15)),
+                Text(d.source,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: AppColors.slate, fontSize: 12)),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: (overdue ? AppColors.expense : AppColors.ink)
+                  .withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              overdue ? 'overdue · ${dayMonth(d.dueAt)}' : 'due ${dayMonth(d.dueAt)}',
+              style: TextStyle(
+                  color: overdue ? AppColors.expense : AppColors.ink,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12),
+            ),
+          ),
+        ],
       ),
     );
   }

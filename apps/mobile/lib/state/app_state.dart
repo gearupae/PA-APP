@@ -2,17 +2,28 @@ import 'package:flutter/foundation.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../models/models.dart';
+import '../services/dues_extractor.dart';
 import '../services/expense_parser.dart';
 import '../services/local_store.dart';
+import '../services/recorder_controller.dart';
 import '../services/reminder_extractor.dart';
 import '../services/sms_service.dart';
 
 /// App-wide state: data loading, permissions, derived dashboard figures.
 class AppState extends ChangeNotifier {
-  AppState(this.store);
+  AppState(this.store) {
+    recorder = RecorderController(
+      onSaveNote: addNote,
+      onReminders: addRemindersFromText,
+    );
+  }
 
   final LocalStore store;
   final SmsService _sms = SmsService();
+  late final RecorderController recorder;
+
+  /// Upcoming payable dues parsed from SMS (amount + date).
+  List<Due> get dues => DuesExtractor.extract(messages);
 
   List<SmsItem> messages = [];
   List<Txn> txns = []; // parsed (from SMS) + manual, with overrides applied

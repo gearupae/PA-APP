@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../config/api_config.dart';
 import '../models/models.dart';
 
 /// Lightweight JSON persistence on top of SharedPreferences.
@@ -13,6 +14,28 @@ class LocalStore {
   static Future<LocalStore> instance() async {
     _instance ??= LocalStore._(await SharedPreferences.getInstance());
     return _instance!;
+  }
+
+  // --- account / server ---
+  String get apiBaseUrl =>
+      _prefs.getString('apiBaseUrl') ?? ApiConfig.baseUrl;
+  Future<void> setApiBaseUrl(String v) => _prefs.setString('apiBaseUrl', v);
+
+  String get authToken => _prefs.getString('authToken') ?? '';
+  Future<void> setAuthToken(String v) => _prefs.setString('authToken', v);
+
+  String get authEmail => _prefs.getString('authEmail') ?? '';
+  Future<void> setAuthEmail(String v) => _prefs.setString('authEmail', v);
+
+  bool get offlineMode => _prefs.getBool('offlineMode') ?? false;
+  Future<void> setOfflineMode(bool v) => _prefs.setBool('offlineMode', v);
+
+  bool get signedIn => authToken.isNotEmpty || offlineMode;
+
+  Future<void> signOut() async {
+    await _prefs.remove('authToken');
+    await _prefs.remove('authEmail');
+    await _prefs.setBool('offlineMode', false);
   }
 
   // --- onboarding / consent ---

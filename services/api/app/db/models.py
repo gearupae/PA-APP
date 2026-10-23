@@ -8,6 +8,25 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
 
+class User(Base):
+    """Application user. Single shared DB; all tenant data keys on the
+    user's email via the `user_id` columns on other tables."""
+
+    __tablename__ = "users"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    email: Mapped[str] = mapped_column(
+        String(320), unique=True, index=True, nullable=False
+    )
+    name: Mapped[str] = mapped_column(String(200), nullable=False, default="")
+    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
 class ConnectedAccount(Base):
     """Mail provider connection (OAuth or IMAP). Tokens stored encrypted at rest in production."""
 

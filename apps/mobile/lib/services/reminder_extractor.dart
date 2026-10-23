@@ -163,6 +163,10 @@ class ReminderExtractor {
     return '$from$t';
   }
 
+  /// Public wrapper around the date finder for reuse (e.g. dues parsing).
+  static DateTime? findDate(String body, DateTime received) =>
+      _findDate(body, received);
+
   /// Tries dd/mm/yyyy, dd-mm-yy, "25 Oct", "Oct 25", "25th October".
   static DateTime? _findDate(String body, DateTime received) {
     // Numeric d/m/y or d-m-y

@@ -1,29 +1,32 @@
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
+from app.db.models import User
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer(auto_error=False)
-
-# In-memory stub until Postgres user model is wired (Phase 0).
-_STUB_USERS: dict[str, dict] = {}
 
 
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    email: str = ""
+    name: str = ""
 
 
 class UserRegister(BaseModel):
     email: str
     password: str
+    name: str = ""
 
 
 class UserLogin(BaseModel):
@@ -42,21 +45,42 @@ def create_access_token(subject: str) -> str:
     )
 
 
-def register_user(body: UserRegister) -> TokenResponse:
-    if body.email in _STUB_USERS:
+def _norm(email: str) -> str:
+    email = email.strip().lower()
+    if "@" not in email or "." not in email.split("@")[-1]:
+        raise HTTPException(status_code=400, detail="Invalid email address")
+    return email
+
+
+async def register_user(body: UserRegister, db: AsyncSession) -> TokenResponse:
+    email = _norm(body.email)
+    if len(body.password) < 6:
+        raise HTTPException(
+            status_code=400, detail="Password must be at least 6 characters"
+        )
+    existing = await db.scalar(select(User).where(User.email == email))
+    if existing is not None:
         raise HTTPException(status_code=400, detail="Email already registered")
-    _STUB_USERS[body.email] = {
-        "email": body.email,
-        "hashed_password": pwd_context.hash(body.password),
-    }
-    return TokenResponse(access_token=create_access_token(body.email))
+    user = User(
+        email=email,
+        name=body.name.strip(),
+        hashed_password=pwd_context.hash(body.password),
+    )
+    db.add(user)
+    await db.commit()
+    return TokenResponse(
+        access_token=create_access_token(email), email=email, name=user.name
+    )
 
 
-def login_user(body: UserLogin) -> TokenResponse:
-    user = _STUB_USERS.get(body.email)
-    if not user or not pwd_context.verify(body.password, user["hashed_password"]):
+async def login_user(body: UserLogin, db: AsyncSession) -> TokenResponse:
+    email = _norm(body.email)
+    user = await db.scalar(select(User).where(User.email == email))
+    if user is None or not pwd_context.verify(body.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    return TokenResponse(access_token=create_access_token(body.email))
+    return TokenResponse(
+        access_token=create_access_token(email), email=email, name=user.name
+    )
 
 
 async def get_current_user(

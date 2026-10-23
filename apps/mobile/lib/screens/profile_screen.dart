@@ -3,15 +3,16 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
-import 'connect_account_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key, required this.state});
+  const ProfileScreen({super.key, required this.state, required this.onSignedOut});
   final AppState state;
+  final VoidCallback onSignedOut;
 
   @override
   Widget build(BuildContext context) {
     final name = state.store.userName;
+    final email = state.store.authEmail;
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
       body: ListView(
@@ -41,13 +42,13 @@ class ProfileScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(name.isEmpty ? 'Welcome' : name,
+                      Text(name.isEmpty ? 'Account' : name,
                           style: const TextStyle(
                               color: Colors.white,
                               fontSize: 20,
                               fontWeight: FontWeight.w700)),
-                      const Text('Personal assistant',
-                          style: TextStyle(color: Colors.white70)),
+                      Text(email.isEmpty ? 'Offline' : email,
+                          style: const TextStyle(color: Colors.white70)),
                     ],
                   ),
                 ),
@@ -55,63 +56,41 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          _group('Email (beta)', [
-            _tile(
-              Icons.mark_email_read_outlined,
-              'Connect Gmail / Outlook / IMAP',
-              'Pulls reminders & important mail (needs the server).',
-              () => Navigator.of(context).push(MaterialPageRoute<void>(
-                  builder: (_) => const ConnectAccountScreen())),
+          Card(
+            child: Column(
+              children: [
+                _PermStatusTile(
+                    icon: Icons.sms_outlined,
+                    title: 'SMS',
+                    perm: Permission.sms),
+                _PermStatusTile(
+                    icon: Icons.mic_none,
+                    title: 'Microphone',
+                    perm: Permission.microphone),
+                _PermStatusTile(
+                    icon: Icons.notifications_none,
+                    title: 'Notifications',
+                    perm: Permission.notification),
+              ],
             ),
-          ]),
+          ),
           const SizedBox(height: 16),
-          _group('Permissions', [
-            _PermStatusTile(
-                icon: Icons.sms_outlined, title: 'SMS access', perm: Permission.sms),
-            _PermStatusTile(
-                icon: Icons.mic_none, title: 'Microphone', perm: Permission.microphone),
-            _PermStatusTile(
-                icon: Icons.notifications_none,
-                title: 'Notifications',
-                perm: Permission.notification),
-          ]),
-          const SizedBox(height: 16),
-          _group('About', [
-            _tile(Icons.privacy_tip_outlined, 'Your data stays on device',
-                'SMS, notes and reminders never leave your phone.', null),
-            _tile(Icons.info_outline, 'Call recording',
-                'Not available — modern Android blocks third-party call recording.',
-                null),
-          ]),
-          const SizedBox(height: 24),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.logout, color: AppColors.expense),
+              title: const Text('Sign out',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
+              onTap: () async {
+                await state.recorder.cancel();
+                await state.store.signOut();
+                onSignedOut();
+              },
+            ),
+          ),
         ],
       ),
     );
   }
-
-  Widget _group(String title, List<Widget> children) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 8),
-            child: Text(title,
-                style: TextStyle(
-                    fontWeight: FontWeight.w700, color: AppColors.slate)),
-          ),
-          Card(child: Column(children: children)),
-        ],
-      );
-
-  Widget _tile(IconData icon, String title, String subtitle,
-          VoidCallback? onTap) =>
-      ListTile(
-        leading: Icon(icon, color: AppColors.ink),
-        title:
-            Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text(subtitle),
-        trailing: onTap == null ? null : const Icon(Icons.chevron_right),
-        onTap: onTap,
-      );
 }
 
 class _PermStatusTile extends StatefulWidget {
