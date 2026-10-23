@@ -1,8 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
-    <!-- Phone call recording: OEM-dependent; declare only if implementing dialer/accessibility path -->
-    <!-- <uses-permission android:name="android.permission.READ_PHONE_STATE"/> -->
+    <uses-permission android:name="android.permission.READ_SMS"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Phone call recording is not supported by the OS for third-party apps on
+         modern Android; only in-app / speakerphone voice capture is used. -->
     <application
         android:label="PA-APP"
         android:name="${applicationName}"
@@ -22,4 +24,9 @@
         </activity>
         <meta-data android:name="flutterEmbedding" android:value="2"/>
     </application>
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
 </manifest>
