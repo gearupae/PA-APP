@@ -84,12 +84,14 @@ class ReminderItem {
 }
 
 class SignalsApi {
-  SignalsApi({http.Client? client, String? accessToken})
+  SignalsApi({http.Client? client, String? accessToken, String? baseUrl})
       : _client = client ?? http.Client(),
-        _token = accessToken ?? ApiConfig.accessToken;
+        _token = accessToken ?? ApiConfig.accessToken,
+        _base = baseUrl ?? ApiConfig.baseUrl;
 
   final http.Client _client;
   final String _token;
+  final String _base;
 
   Map<String, String> get _headers => {
         'Content-Type': 'application/json',
@@ -97,7 +99,7 @@ class SignalsApi {
       };
 
   Future<List<DetectedSubscription>> listSubscriptions({String? status}) async {
-    final uri = Uri.parse('${ApiConfig.baseUrl}/mail/subscriptions').replace(
+    final uri = Uri.parse('$_base/mail/subscriptions').replace(
       queryParameters: status != null ? {'status': status} : null,
     );
     final res = await _client.get(uri, headers: _headers);
@@ -113,7 +115,7 @@ class SignalsApi {
     String status,
   ) async {
     final res = await _client.patch(
-      Uri.parse('${ApiConfig.baseUrl}/mail/subscriptions/$id'),
+      Uri.parse('$_base/mail/subscriptions/$id'),
       headers: _headers,
       body: jsonEncode({'status': status}),
     );
@@ -125,7 +127,7 @@ class SignalsApi {
 
   Future<List<ReminderItem>> listReminders() async {
     final res = await _client.get(
-      Uri.parse('${ApiConfig.baseUrl}/reminders'),
+      Uri.parse('$_base/reminders'),
       headers: _headers,
     );
     _ensureOk(res);
@@ -137,7 +139,7 @@ class SignalsApi {
 
   Future<ReminderItem> createReminderFromDetected(String detectedId) async {
     final res = await _client.post(
-      Uri.parse('${ApiConfig.baseUrl}/reminders/from-detected/$detectedId'),
+      Uri.parse('$_base/reminders/from-detected/$detectedId'),
       headers: _headers,
       body: jsonEncode({}),
     );

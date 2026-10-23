@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../models/models.dart';
 import '../services/dues_extractor.dart';
+import '../services/mail_api.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../util/format.dart';
 import '../widgets/donut_chart.dart';
+import 'connect_account_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key, required this.state, required this.onRecord});
@@ -37,6 +39,7 @@ class DashboardScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                 ],
                 _duesSection(),
+                _emailSection(context),
                 _remindersSection(reminders),
                 _todosSection(todos),
                 _moneySection(context),
@@ -287,6 +290,67 @@ class DashboardScreen extends StatelessWidget {
           ],
         ),
       );
+
+  // ---- Important email (summaries only: subject + sender) ----
+  Widget _emailSection(BuildContext context) {
+    if (!state.emailConnected) {
+      // Only nudge to connect; no clutter if offline.
+      if (state.store.authToken.isEmpty) return const SizedBox.shrink();
+      return _section(
+        'Email',
+        Icons.mark_email_unread_outlined,
+        child: ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.add_link, color: AppColors.ink),
+          title: const Text('Connect your email'),
+          subtitle: const Text('Pull reminders, subscriptions & important mail'),
+          onTap: () async {
+            await Navigator.of(context).push(MaterialPageRoute<void>(
+                builder: (_) => ConnectAccountScreen(
+                      mailApi: MailApi(
+                        baseUrl: state.store.apiBaseUrl,
+                        accessToken: state.store.authToken,
+                      ),
+                    )));
+            await state.loadEmail();
+          },
+        ),
+      );
+    }
+    final emails = state.importantEmails.take(4).toList();
+    final subs = state.emailSubscriptions.take(3).toList();
+    if (emails.isEmpty && subs.isEmpty) return const SizedBox.shrink();
+    return _section(
+      'Important email',
+      Icons.mark_email_unread_outlined,
+      child: Column(
+        children: [
+          ...emails.map((m) => ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.priority_high, color: AppColors.amber),
+                title: Text(m.subject.isEmpty ? '(no subject)' : m.subject,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: Text(m.fromAddress,
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
+              )),
+          ...subs.map((s) => ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading:
+                    const Icon(Icons.subscriptions_outlined, color: AppColors.violet),
+                title: Text(s.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: Text(s.suggestedDueAt != null
+                    ? 'Renews ${dayMonth(s.suggestedDueAt!)}'
+                    : 'Subscription'),
+              )),
+        ],
+      ),
+    );
+  }
 
   // ---- Dues (summarised, not raw messages) ----
   Widget _duesSection() {

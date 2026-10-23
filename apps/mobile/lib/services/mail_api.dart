@@ -114,12 +114,14 @@ class OAuthConnectResult {
 }
 
 class MailApi {
-  MailApi({http.Client? client, String? accessToken})
+  MailApi({http.Client? client, String? accessToken, String? baseUrl})
       : _client = client ?? http.Client(),
-        _token = accessToken ?? ApiConfig.accessToken;
+        _token = accessToken ?? ApiConfig.accessToken,
+        _base = baseUrl ?? ApiConfig.baseUrl;
 
   final http.Client _client;
   final String _token;
+  final String _base;
 
   Map<String, String> get _headers => {
         'Content-Type': 'application/json',
@@ -128,7 +130,7 @@ class MailApi {
 
   Future<List<ConnectedAccount>> listAccounts() async {
     final res = await _client.get(
-      Uri.parse('${ApiConfig.baseUrl}/mail/accounts'),
+      Uri.parse('$_base/mail/accounts'),
       headers: _headers,
     );
     _ensureOk(res);
@@ -140,7 +142,7 @@ class MailApi {
 
   Future<OAuthConnectResult> connectGmail() async {
     final res = await _client.post(
-      Uri.parse('${ApiConfig.baseUrl}/mail/accounts/connect/gmail'),
+      Uri.parse('$_base/mail/accounts/connect/gmail'),
       headers: _headers,
     );
     _ensureOk(res);
@@ -151,7 +153,7 @@ class MailApi {
 
   Future<OAuthConnectResult> connectOutlook() async {
     final res = await _client.post(
-      Uri.parse('${ApiConfig.baseUrl}/mail/accounts/connect/outlook'),
+      Uri.parse('$_base/mail/accounts/connect/outlook'),
       headers: _headers,
     );
     _ensureOk(res);
@@ -168,7 +170,7 @@ class MailApi {
     bool useSsl = true,
   }) async {
     final res = await _client.post(
-      Uri.parse('${ApiConfig.baseUrl}/mail/accounts/connect/imap'),
+      Uri.parse('$_base/mail/accounts/connect/imap'),
       headers: _headers,
       body: jsonEncode({
         'host': host,
@@ -186,7 +188,7 @@ class MailApi {
 
   Future<void> disconnectAccount(String accountId) async {
     final res = await _client.delete(
-      Uri.parse('${ApiConfig.baseUrl}/mail/accounts/$accountId'),
+      Uri.parse('$_base/mail/accounts/$accountId'),
       headers: _headers,
     );
     if (res.statusCode != 204) {
@@ -195,7 +197,7 @@ class MailApi {
   }
 
   Future<List<MailMessage>> listMessages({bool importantOnly = false}) async {
-    final uri = Uri.parse('${ApiConfig.baseUrl}/mail/messages').replace(
+    final uri = Uri.parse('$_base/mail/messages').replace(
       queryParameters: importantOnly ? {'important': 'true'} : null,
     );
     final res = await _client.get(
@@ -211,7 +213,7 @@ class MailApi {
 
   Future<MailMessage> getMessage(String messageId) async {
     final res = await _client.get(
-      Uri.parse('${ApiConfig.baseUrl}/mail/messages/$messageId'),
+      Uri.parse('$_base/mail/messages/$messageId'),
       headers: _headers,
     );
     _ensureOk(res);

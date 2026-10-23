@@ -37,6 +37,7 @@ class RecorderController extends ChangeNotifier {
   String? lastSavedNoteId;
   int lastReminderCount = 0;
 
+  String? get lastError => _speech.lastError;
   String get text => ('$buffer $live').trim();
   String get clock {
     final mm = elapsed.inMinutes.toString().padLeft(2, '0');

@@ -23,8 +23,10 @@ class _RecordScreenState extends State<RecordScreen> {
       if (!rec.active && !rec.starting) {
         final ok = await rec.start();
         if (!ok && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text('Microphone or speech not available.')));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(rec.lastError ??
+                  'Microphone or speech recognition not available.'),
+              duration: const Duration(seconds: 5)));
         }
       }
     });
@@ -35,6 +37,11 @@ class _RecordScreenState extends State<RecordScreen> {
     final id = await rec.stopAndSave();
     if (!mounted) return;
     if (id == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(rec.lastError ??
+            'No speech was captured. Speak clearly and check the mic.'),
+        duration: const Duration(seconds: 4),
+      ));
       Navigator.of(context).pop();
       return;
     }
@@ -90,10 +97,17 @@ class _RecordScreenState extends State<RecordScreen> {
                     padding: const EdgeInsets.all(20),
                     child: SingleChildScrollView(
                       reverse: true,
-                      child: Text(
-                        rec.text.isEmpty ? '…' : rec.text,
-                        style: const TextStyle(fontSize: 19, height: 1.5),
-                      ),
+                      child: rec.text.isEmpty && rec.lastError != null
+                          ? Text(
+                              rec.lastError!,
+                              style: const TextStyle(
+                                  fontSize: 15, color: AppColors.expense),
+                            )
+                          : Text(
+                              rec.text.isEmpty ? '…' : rec.text,
+                              style:
+                                  const TextStyle(fontSize: 19, height: 1.5),
+                            ),
                     ),
                   ),
                 ),

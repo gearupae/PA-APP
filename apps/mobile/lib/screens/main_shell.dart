@@ -45,12 +45,13 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     }
   }
 
-  // Auto-start capture every time the app is in front (if consented + allowed).
+  // Auto-start capture every time the app is in front (once mic is allowed).
   Future<void> _maybeAutoStart() async {
     final rec = widget.state.recorder;
     if (rec.active || rec.starting) return;
-    if (!widget.state.store.recordingConsent) return;
-    if (!await Permission.microphone.isGranted) return;
+    // Request mic up front so always-on capture can begin.
+    final mic = await Permission.microphone.request();
+    if (!mic.isGranted) return;
     await rec.start();
   }
 

@@ -5,8 +5,10 @@ import '../models/models.dart';
 import '../services/dues_extractor.dart';
 import '../services/expense_parser.dart';
 import '../services/local_store.dart';
+import '../services/mail_api.dart';
 import '../services/recorder_controller.dart';
 import '../services/reminder_extractor.dart';
+import '../services/signals_api.dart';
 import '../services/sms_service.dart';
 
 /// App-wide state: data loading, permissions, derived dashboard figures.
@@ -30,6 +32,11 @@ class AppState extends ChangeNotifier {
   List<Note> notes = [];
   List<Reminder> reminders = [];
 
+  // Email (populated from the backend when an account is connected).
+  List<MailMessage> importantEmails = [];
+  List<DetectedSubscription> emailSubscriptions = [];
+  bool emailConnected = false;
+
   bool smsGranted = false;
   bool loadingSms = false;
 
@@ -43,6 +50,63 @@ class AppState extends ChangeNotifier {
     if (smsGranted) {
       await refreshSms();
     }
+    await loadEmail();
+  }
+
+  // ---- Email: fetch only the useful bits (important mail + subscriptions) ----
+  Future<void> loadEmail() async {
+    if (store.authToken.isEmpty) {
+      emailConnected = false;
+      return;
+    }
+    final mail = MailApi(baseUrl: store.apiBaseUrl, accessToken: store.authToken);
+    final signals =
+        SignalsApi(baseUrl: store.apiBaseUrl, accessToken: store.authToken);
+    try {
+      final accounts = await mail.listAccounts();
+      emailConnected = accounts.isNotEmpty;
+      if (!emailConnected) {
+        importantEmails = [];
+        emailSubscriptions = [];
+        notifyListeners();
+        return;
+      }
+      importantEmails = await mail.listMessages(importantOnly: true);
+      try {
+        emailSubscriptions = await signals.listSubscriptions();
+      } catch (_) {
+        emailSubscriptions = [];
+      }
+      notifyListeners();
+    } catch (_) {
+      // Backend unreachable or not configured — stay quiet, keep offline UX.
+      emailConnected = false;
+      importantEmails = [];
+      emailSubscriptions = [];
+      notifyListeners();
+    }
+  }
+
+  /// Reminders parsed from important-email subjects/snippets (no full bodies).
+  List<Reminder> get emailReminders {
+    final dismissed = store.dismissedAutoReminders;
+    final done = store.doneAutoReminders;
+    final out = <Reminder>[];
+    for (final m in importantEmails) {
+      final text = '${m.subject}. ${m.snippet}';
+      final found = ReminderExtractor.fromText(text);
+      if (found.isEmpty) continue;
+      final r = found.first;
+      final id = 'auto_mail_${m.id}';
+      if (dismissed.contains(id)) continue;
+      out.add(Reminder(
+        id: id,
+        title: '${m.fromAddress}: ${m.subject}',
+        dueAt: r.dueAt,
+        kind: r.kind,
+      )..done = done.contains(id));
+    }
+    return out;
   }
 
   // ---- SMS + transactions ----
@@ -120,6 +184,24 @@ class AppState extends ChangeNotifier {
   /// Simple, friendly money suggestions from the current month's data.
   List<String> get suggestions {
     final out = <String>[];
+
+    // Email-derived insights first (summaries only, never full emails).
+    if (importantEmails.isNotEmpty) {
+      final n = importantEmails.length;
+      out.add('$n important email${n == 1 ? '' : 's'} need your attention.');
+    }
+    if (emailSubscriptions.isNotEmpty) {
+      final names = emailSubscriptions
+          .take(2)
+          .map((s) => s.title)
+          .where((t) => t.isNotEmpty)
+          .join(', ');
+      final n = emailSubscriptions.length;
+      out.add(names.isEmpty
+          ? '$n subscription${n == 1 ? '' : 's'} detected from your email.'
+          : '$n subscription${n == 1 ? '' : 's'} detected (e.g. $names).');
+    }
+
     final breakdown = categoryBreakdown;
     if (monthTxns.isEmpty) {
       return [
@@ -189,9 +271,9 @@ class AppState extends ChangeNotifier {
         .toList();
   }
 
-  /// All reminders (manual + auto), sorted by due date.
+  /// All reminders (manual + auto from SMS + from email), sorted by due date.
   List<Reminder> get allReminders {
-    final list = [...reminders, ...autoReminders]
+    final list = [...reminders, ...autoReminders, ...emailReminders]
       ..sort((a, b) => a.dueAt.compareTo(b.dueAt));
     return list;
   }

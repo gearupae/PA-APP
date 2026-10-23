@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../services/mail_api.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
+import 'connect_account_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key, required this.state, required this.onSignedOut});
@@ -72,6 +74,29 @@ class ProfileScreen extends StatelessWidget {
                     title: 'Notifications',
                     perm: Permission.notification),
               ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.mark_email_read_outlined,
+                  color: AppColors.ink),
+              title: const Text('Connect email',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: Text(state.emailConnected
+                  ? 'Connected · pulling reminders & subscriptions'
+                  : 'Gmail, Outlook or IMAP (needs the server)'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () async {
+                await Navigator.of(context).push(MaterialPageRoute<void>(
+                    builder: (_) => ConnectAccountScreen(
+                          mailApi: MailApi(
+                            baseUrl: state.store.apiBaseUrl,
+                            accessToken: state.store.authToken,
+                          ),
+                        )));
+                await state.loadEmail();
+              },
             ),
           ),
           const SizedBox(height: 16),
