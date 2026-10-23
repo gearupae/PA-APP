@@ -194,6 +194,17 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Parse a transcript and persist any reminders found; returns the count.
+  Future<int> addRemindersFromText(String text) async {
+    final found = ReminderExtractor.fromText(text);
+    if (found.isEmpty) return 0;
+    reminders = [...reminders, ...found]
+      ..sort((a, b) => a.dueAt.compareTo(b.dueAt));
+    await store.saveReminders(reminders);
+    notifyListeners();
+    return found.length;
+  }
+
   Future<void> toggleReminder(Reminder r) async {
     if (_isAuto(r.id)) {
       r.done = !r.done;

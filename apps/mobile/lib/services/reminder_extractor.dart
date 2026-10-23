@@ -57,6 +57,105 @@ class ReminderExtractor {
     return out;
   }
 
+  static final _weekdays = <String, int>{
+    'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4,
+    'friday': 5, 'saturday': 6, 'sunday': 7,
+  };
+
+  /// Extract reminders from a free-text transcript (voice note / meeting).
+  /// Understands explicit dates plus "tomorrow", "today", weekdays and times.
+  static List<Reminder> fromText(String text, {DateTime? now}) {
+    final base = now ?? DateTime.now();
+    final sentences = text
+        .split(RegExp(r'(?<=[.!?])\s+|\n+'))
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty);
+    final out = <Reminder>[];
+    var i = 0;
+    for (final s in sentences) {
+      final lower = s.toLowerCase();
+      ReminderKind? kind;
+      if (_meeting.hasMatch(lower) ||
+          lower.contains('remind') ||
+          lower.contains('follow up') ||
+          lower.contains('follow-up')) {
+        kind = ReminderKind.meeting;
+      } else if (_payment.hasMatch(lower) || _renewal.hasMatch(lower)) {
+        kind = ReminderKind.payment;
+      }
+      if (kind == null) continue;
+      final when = _findWhen(s, base);
+      if (when == null) continue;
+      out.add(Reminder(
+        id: 'rem_${base.millisecondsSinceEpoch}_${i++}',
+        title: _trimText(s),
+        dueAt: when,
+        kind: kind,
+      ));
+    }
+    return out;
+  }
+
+  static String _trimText(String s) {
+    var t = s.replaceAll(RegExp(r'\s+'), ' ').trim();
+    if (t.isNotEmpty) t = '${t[0].toUpperCase()}${t.substring(1)}';
+    if (t.length > 80) t = '${t.substring(0, 78)}…';
+    return t;
+  }
+
+  static DateTime? _findWhen(String text, DateTime base) {
+    final lower = text.toLowerCase();
+    final time = _findTime(lower); // (hour, minute) or null
+    final h = time?.$1 ?? 9;
+    final m = time?.$2 ?? 0;
+
+    if (lower.contains('tomorrow')) {
+      final d = base.add(const Duration(days: 1));
+      return DateTime(d.year, d.month, d.day, h, m);
+    }
+    if (lower.contains('today') || lower.contains('tonight')) {
+      return DateTime(base.year, base.month, base.day, h, m);
+    }
+    for (final entry in _weekdays.entries) {
+      if (lower.contains(entry.key)) {
+        var add = (entry.value - base.weekday) % 7;
+        if (add == 0) add = 7; // next week's same day
+        final d = base.add(Duration(days: add));
+        return DateTime(d.year, d.month, d.day, h, m);
+      }
+    }
+    final explicit = _findDate(text, base);
+    if (explicit != null) {
+      return DateTime(explicit.year, explicit.month, explicit.day, h, m);
+    }
+    // Time only ("at 3pm") -> today, or tomorrow if already past.
+    if (time != null) {
+      var dt = DateTime(base.year, base.month, base.day, h, m);
+      if (dt.isBefore(base)) dt = dt.add(const Duration(days: 1));
+      return dt;
+    }
+    return null;
+  }
+
+  static (int, int)? _findTime(String lower) {
+    final mt = RegExp(r'\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b').firstMatch(lower);
+    if (mt != null) {
+      var h = int.parse(mt.group(1)!);
+      final min = mt.group(2) != null ? int.parse(mt.group(2)!) : 0;
+      final ap = mt.group(3)!;
+      if (ap == 'pm' && h < 12) h += 12;
+      if (ap == 'am' && h == 12) h = 0;
+      if (h <= 23 && min <= 59) return (h, min);
+    }
+    final at = RegExp(r'\bat\s+(\d{1,2})(?::(\d{2}))?\b').firstMatch(lower);
+    if (at != null) {
+      final h = int.parse(at.group(1)!);
+      final min = at.group(2) != null ? int.parse(at.group(2)!) : 0;
+      if (h <= 23 && min <= 59) return (h, min);
+    }
+    return null;
+  }
+
   static String _title(String body, String sender) {
     var t = body.replaceAll(RegExp(r'\s+'), ' ').trim();
     if (t.length > 70) t = '${t.substring(0, 68)}…';
