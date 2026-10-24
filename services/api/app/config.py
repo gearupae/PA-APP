@@ -36,5 +36,9 @@ class Settings(BaseSettings):
 
     mail_sync_recent_limit: int = 20
 
+    # LLM (OpenAI). Key is injected via environment / .env, never committed.
+    openai_api_key: str = ""
+    openai_model: str = "gpt-4.1"
+
 
 settings = Settings()
