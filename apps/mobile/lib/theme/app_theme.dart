@@ -5,23 +5,23 @@ import 'package:flutter/services.dart';
 /// one subtle sage-green accent, muted coral reserved for recording. Tuned for
 /// a low-stress, high-end finance feel.
 class AppColors {
-  static const seed = Color(0xFF5F8575); // sage — drives M3 widgets
-  static const bg = Color(0xFFF6F7F4); // near-white canvas
+  static const seed = Color(0xFF5D6CB0); // soft indigo — drives M3 widgets
+  static const bg = Color(0xFFF6F7FA); // near-white canvas (cool)
   static const surface = Colors.white;
-  static const ink = Color(0xFF1F2328); // soft near-black
+  static const ink = Color(0xFF20232B); // soft near-black
   static const inkSoft = Color(0xFF2E343A);
 
-  static const accent = Color(0xFF5F8575); // sage (single accent)
-  static const accentSoft = Color(0xFFE8EFEA); // sage tint surface
+  static const accent = Color(0xFF5D6CB0); // soft indigo (single accent)
+  static const accentSoft = Color(0xFFECEEF8); // indigo tint surface
   static const red = Color(0xFFCC6B5A); // muted coral — record only
 
   static const navBg = Colors.white;
-  static const navPill = Color(0xFFE8EFEA);
-  static const tag = Color(0xFFEDEFEB);
-  static const line = Color(0xFFEAECE7);
+  static const navPill = Color(0xFFECEEF8);
+  static const tag = Color(0xFFEDEEF2);
+  static const line = Color(0xFFE9EBF0);
 
-  static const slate = Color(0xFF727B7A);
-  static const income = Color(0xFF5F8575);
+  static const slate = Color(0xFF747880);
+  static const income = Color(0xFF4E9E7E);
   static const expense = Color(0xFFCC6B5A);
   static const violet = Color(0xFF6E63C6);
   static const teal = Color(0xFF2E9393);
