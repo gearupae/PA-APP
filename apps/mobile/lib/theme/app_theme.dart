@@ -5,21 +5,23 @@ import 'package:flutter/services.dart';
 /// grey pill tags, a soft pastel bottom bar and a red voice button — but in a
 /// fresh soft-lilac/violet colour family instead of blue.
 class AppColors {
-  static const seed = Color(0xFF2E9D94); // calm teal — drives M3 widgets
-  static const bg = Color(0xFFF2F5F4); // cool off-white canvas
+  // Matched to the reference screenshots: warm off-white, black header/hero,
+  // white cards, grey pill tags, soft-blue bottom bar, red mic.
+  static const seed = Color(0xFF3E6FB0); // reference blue — drives M3 widgets
+  static const bg = Color(0xFFF4F1EC); // warm off-white canvas
   static const surface = Colors.white;
-  static const surfaceAlt = Color(0xFFEDF1F0); // tiles, inputs, chips, ring
-  static const ink = Color(0xFF17201F); // header, hero, text, buttons
-  static const inkSoft = Color(0xFF2A3331);
+  static const surfaceAlt = Color(0xFFEFEBE4); // tiles, inputs, chips, ring
+  static const ink = Color(0xFF141414); // black header, hero, text, buttons
+  static const inkSoft = Color(0xFF262626);
 
-  static const accent = Color(0xFF2E9D94); // calm teal (single accent)
-  static const accentSoft = Color(0xFFE2F0EE); // teal tint surface
-  static const red = Color(0xFFD2473D); // voice / record
+  static const accent = Color(0xFF3E6FB0); // reference blue (single accent)
+  static const accentSoft = Color(0xFFDCE4EC); // reference blue tint
+  static const red = Color(0xFFD13A34); // red mic / record
 
-  static const navBg = Color(0xFFDBEDEA); // soft teal bottom bar
-  static const navPill = Color(0xFFBFE2DC); // teal selected pill
-  static const tag = Color(0xFFECEAE6); // warm grey pill tags
-  static const line = Color(0xFFECE9E4); // light hairline
+  static const navBg = Color(0xFFDCE4EC); // soft blue bottom bar (reference)
+  static const navPill = Color(0xFFBDD7EC); // blue selected pill (reference)
+  static const tag = Color(0xFFE8E6E2); // grey pill tags (reference)
+  static const line = Color(0xFFEBE7E0); // light hairline
 
   static const slate = Color(0xFF6E6E76); // muted text
   static const income = Color(0xFF2E9E73);
@@ -113,7 +115,7 @@ class AppTheme {
                 : FontWeight.w500,
             color: states.contains(WidgetState.selected)
                 ? AppColors.ink
-                : const Color(0xFF5E6F6C),
+                : const Color(0xFF5B6B78),
           ),
         ),
         iconTheme: WidgetStateProperty.resolveWith(
@@ -121,7 +123,7 @@ class AppTheme {
             size: 26,
             color: states.contains(WidgetState.selected)
                 ? AppColors.ink
-                : const Color(0xFF5E6F6C),
+                : const Color(0xFF5B6B78),
           ),
         ),
       ),
