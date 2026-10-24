@@ -204,8 +204,13 @@ class AppState extends ChangeNotifier {
 
     final breakdown = categoryBreakdown;
     if (monthTxns.isEmpty) {
+      if (!smsGranted) {
+        return [
+          'Grant SMS access (or tap + Add) to see spending, dues and insights.'
+        ];
+      }
       return [
-        'No transactions detected yet this month. Grant SMS access or add one manually to see insights.'
+        'No bank or payment SMS found this month. When a transaction SMS arrives, your spending and dues appear here automatically — or tap + Add.'
       ];
     }
     if (monthExpense > 0 && breakdown.isNotEmpty) {

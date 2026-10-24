@@ -15,21 +15,15 @@ class RecordScreen extends StatefulWidget {
 }
 
 class _RecordScreenState extends State<RecordScreen> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final rec = widget.state.recorder;
-      if (!rec.active && !rec.starting) {
-        final ok = await rec.start();
-        if (!ok && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(rec.lastError ??
-                  'Microphone or speech recognition not available.'),
-              duration: const Duration(seconds: 5)));
-        }
-      }
-    });
+  Future<void> _start() async {
+    final rec = widget.state.recorder;
+    final ok = await rec.start();
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(rec.lastError ??
+              'Microphone or speech recognition not available.'),
+          duration: const Duration(seconds: 5)));
+    }
   }
 
   Future<void> _stop() async {
@@ -114,7 +108,7 @@ class _RecordScreenState extends State<RecordScreen> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
                   child: GestureDetector(
-                    onTap: rec.active ? _stop : () => rec.start(),
+                    onTap: rec.active ? _stop : _start,
                     child: Container(
                       width: 96,
                       height: 96,

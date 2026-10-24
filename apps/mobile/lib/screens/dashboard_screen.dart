@@ -10,10 +10,9 @@ import '../widgets/donut_chart.dart';
 import 'connect_account_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({super.key, required this.state, required this.onRecord});
+  const DashboardScreen({super.key, required this.state});
 
   final AppState state;
-  final VoidCallback onRecord;
 
   @override
   Widget build(BuildContext context) {

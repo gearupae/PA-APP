@@ -17,6 +17,13 @@ class NotesScreen extends StatelessWidget {
       builder: (context, _) {
         return Scaffold(
           appBar: AppBar(title: const Text('Notes')),
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: onRecord,
+            backgroundColor: AppColors.red,
+            foregroundColor: Colors.white,
+            icon: const Icon(Icons.mic),
+            label: const Text('Record'),
+          ),
           body: state.notes.isEmpty
               ? _empty(context)
               : ListView.separated(
