@@ -35,6 +35,7 @@ class Txn {
     required this.isIncome,
     this.manual = false,
     this.raw,
+    this.business = false,
   });
 
   final String id;
@@ -45,6 +46,7 @@ class Txn {
   final bool isIncome;
   final bool manual;
   final String? raw;
+  bool business; // personal (false) vs business (true)
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -55,6 +57,7 @@ class Txn {
         'isIncome': isIncome,
         'manual': manual,
         'raw': raw,
+        'business': business,
       };
 
   factory Txn.fromJson(Map<String, dynamic> j) => Txn(
@@ -66,6 +69,7 @@ class Txn {
         isIncome: j['isIncome'] as bool? ?? false,
         manual: j['manual'] as bool? ?? false,
         raw: j['raw'] as String?,
+        business: j['business'] as bool? ?? false,
       );
 }
 
@@ -103,6 +107,7 @@ class Note {
     required this.todos,
     required this.mindMap,
     required this.createdAt,
+    this.promises = const [],
   });
 
   final String id;
@@ -111,6 +116,7 @@ class Note {
   List<Todo> todos;
   MapNode mindMap;
   final DateTime createdAt;
+  List<String> promises; // "I'll send…" commitments detected in the note
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -119,6 +125,7 @@ class Note {
         'todos': todos.map((t) => t.toJson()).toList(),
         'mindMap': mindMap.toJson(),
         'createdAt': createdAt.toIso8601String(),
+        'promises': promises,
       };
 
   factory Note.fromJson(Map<String, dynamic> j) => Note(
@@ -130,6 +137,9 @@ class Note {
             .toList(),
         mindMap: MapNode.fromJson(j['mindMap'] as Map<String, dynamic>),
         createdAt: DateTime.parse(j['createdAt'] as String),
+        promises: (j['promises'] as List<dynamic>? ?? [])
+            .map((e) => e as String)
+            .toList(),
       );
 }
 

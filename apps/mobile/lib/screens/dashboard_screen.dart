@@ -8,6 +8,7 @@ import '../theme/app_theme.dart';
 import '../util/format.dart';
 import '../widgets/donut_chart.dart';
 import 'connect_account_screen.dart';
+import 'morning_brief_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key, required this.state});
@@ -31,7 +32,14 @@ class DashboardScreen extends StatelessWidget {
             child: ListView(
               padding: AppTheme.pagePad,
               children: [
-                _actionNeeded(reminders.length, todos.length),
+                GestureDetector(
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => MorningBriefScreen(state: state),
+                    ),
+                  ),
+                  child: _actionNeeded(reminders.length, todos.length),
+                ),
                 const SizedBox(height: 16),
                 if (!state.smsGranted) ...[
                   _smsPrompt(),
@@ -41,6 +49,7 @@ class DashboardScreen extends StatelessWidget {
                 _emailSection(context),
                 _remindersSection(reminders),
                 _todosSection(todos),
+                _promisesSection(),
                 _moneySection(context),
                 _suggestions(),
                 const SizedBox(height: 90),
@@ -207,6 +216,34 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
+  // ---- Promises (from voice notes) ----
+  Widget _promisesSection() {
+    final promises = state.promises.take(4).toList();
+    if (promises.isEmpty) return const SizedBox.shrink();
+    return _section(
+      'You promised',
+      Icons.handshake_outlined,
+      child: Column(
+        children: promises
+            .map((p) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.subdirectory_arrow_right,
+                          size: 16, color: AppColors.slate),
+                      const SizedBox(width: 8),
+                      Expanded(
+                          child: Text(p.text,
+                              maxLines: 2, overflow: TextOverflow.ellipsis)),
+                    ],
+                  ),
+                ))
+            .toList(),
+      ),
+    );
+  }
+
   // ---- Money metrics ----
   Widget _moneySection(BuildContext context) {
     final breakdown = state.categoryBreakdown;
@@ -228,6 +265,30 @@ class DashboardScreen extends StatelessWidget {
               _stat('Saved', state.monthSavings, AppColors.ink),
             ],
           ),
+          if (state.businessOwes > 0) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceAlt,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.business_center_outlined,
+                      size: 18, color: AppColors.ink),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                      child: Text('Business owes you',
+                          style: TextStyle(fontWeight: FontWeight.w600))),
+                  Text(money(state.businessOwes),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w800, fontSize: 15)),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
           if (breakdown.isEmpty)
             _emptyLine('Spending by category will appear from your SMS.')

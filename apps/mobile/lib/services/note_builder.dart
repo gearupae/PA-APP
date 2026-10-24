@@ -18,6 +18,13 @@ class NoteBuilder {
     'out', 'off', 'per', 'via', 'also', 'any', 'been', 'more', 'some',
   };
 
+  // Commitments the speaker made: "I'll send…", "I will get back…", etc.
+  static final _promiseTrigger = RegExp(
+    r"\b(i'?ll|i will|i'?m going to|i am going to|i promise|let me|i'?ll get back|"
+    r"i'?ll send|i'?ll share|i'?ll call|i'?ll follow up|we'?ll send)\b",
+    caseSensitive: false,
+  );
+
   static Note build(String transcript, {DateTime? now}) {
     final created = now ?? DateTime.now();
     final clean = transcript.trim();
@@ -26,6 +33,16 @@ class NoteBuilder {
         .map((s) => s.trim())
         .where((s) => s.isNotEmpty)
         .toList();
+
+    // Promises — things the speaker committed to.
+    final promises = <String>[];
+    for (final s in sentences) {
+      if (_promiseTrigger.hasMatch(s)) {
+        var p = s;
+        if (p.length > 100) p = '${p.substring(0, 98)}…';
+        promises.add(_capitalise(p));
+      }
+    }
 
     // Todos: sentences that look like actions.
     final todos = <Todo>[];
@@ -51,6 +68,7 @@ class NoteBuilder {
       todos: todos,
       mindMap: mindMap,
       createdAt: created,
+      promises: promises,
     );
   }
 

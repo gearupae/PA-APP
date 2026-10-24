@@ -230,6 +230,11 @@ class AppState extends ChangeNotifier {
 
   double get monthSavings => monthIncome - monthExpense;
 
+  /// Business expenses this month (what the business owes the owner back).
+  double get businessOwes => monthTxns
+      .where((t) => !t.isIncome && t.business)
+      .fold(0.0, (s, t) => s + t.amount);
+
   /// Detects a likely duplicate charge (same merchant + amount, 2+ times).
   String? _duplicateCharge() {
     final seen = <String, int>{};
@@ -401,6 +406,17 @@ class AppState extends ChangeNotifier {
       await store.saveReminders(reminders);
     }
     notifyListeners();
+  }
+
+  /// Promises ("I'll send…") detected across all voice notes.
+  List<({Note note, String text})> get promises {
+    final out = <({Note note, String text})>[];
+    for (final n in notes) {
+      for (final p in n.promises) {
+        out.add((note: n, text: p));
+      }
+    }
+    return out;
   }
 
   // ---- open to-dos across all notes (for the dashboard) ----

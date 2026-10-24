@@ -74,6 +74,7 @@ void showAddTransaction(BuildContext context, AppState state) {
   final merchantC = TextEditingController();
   String category = 'Food';
   bool isIncome = false;
+  bool business = false;
 
   showModalBottomSheet<void>(
     context: context,
@@ -127,6 +128,22 @@ void showAddTransaction(BuildContext context, AppState state) {
                   prefixIcon: Icon(Icons.store_outlined)),
             ),
             const SizedBox(height: 12),
+            Row(
+              children: [
+                ChoiceChip(
+                  label: const Text('Personal'),
+                  selected: !business,
+                  onSelected: (_) => setM(() => business = false),
+                ),
+                const SizedBox(width: 8),
+                ChoiceChip(
+                  label: const Text('Business'),
+                  selected: business,
+                  onSelected: (_) => setM(() => business = true),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
             if (!isIncome)
               Wrap(
                 spacing: 8,
@@ -156,6 +173,7 @@ void showAddTransaction(BuildContext context, AppState state) {
                     date: DateTime.now(),
                     isIncome: isIncome,
                     manual: true,
+                    business: business,
                   ));
                   Navigator.pop(ctx);
                 },
