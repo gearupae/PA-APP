@@ -5,19 +5,19 @@ import 'package:flutter/services.dart';
 /// grey pill tags, a soft pastel bottom bar and a red voice button — but in a
 /// fresh soft-lilac/violet colour family instead of blue.
 class AppColors {
-  static const seed = Color(0xFF6E5FC6); // soft violet — drives M3 widgets
-  static const bg = Color(0xFFF5F4F2); // warm off-white canvas
+  static const seed = Color(0xFF2E9D94); // calm teal — drives M3 widgets
+  static const bg = Color(0xFFF2F5F4); // cool off-white canvas
   static const surface = Colors.white;
-  static const surfaceAlt = Color(0xFFF2F0EB); // tiles, inputs, chips, ring
-  static const ink = Color(0xFF1A1A1E); // header, hero, text, buttons
-  static const inkSoft = Color(0xFF2E2C33);
+  static const surfaceAlt = Color(0xFFEDF1F0); // tiles, inputs, chips, ring
+  static const ink = Color(0xFF17201F); // header, hero, text, buttons
+  static const inkSoft = Color(0xFF2A3331);
 
-  static const accent = Color(0xFF6E5FC6); // soft violet (single accent)
-  static const accentSoft = Color(0xFFECEAF8); // violet tint surface
+  static const accent = Color(0xFF2E9D94); // calm teal (single accent)
+  static const accentSoft = Color(0xFFE2F0EE); // teal tint surface
   static const red = Color(0xFFD2473D); // voice / record
 
-  static const navBg = Color(0xFFE9E6F4); // soft lilac bottom bar
-  static const navPill = Color(0xFFD7D0EE); // lilac selected pill
+  static const navBg = Color(0xFFDBEDEA); // soft teal bottom bar
+  static const navPill = Color(0xFFBFE2DC); // teal selected pill
   static const tag = Color(0xFFECEAE6); // warm grey pill tags
   static const line = Color(0xFFECE9E4); // light hairline
 
@@ -113,7 +113,7 @@ class AppTheme {
                 : FontWeight.w500,
             color: states.contains(WidgetState.selected)
                 ? AppColors.ink
-                : const Color(0xFF6B6978),
+                : const Color(0xFF5E6F6C),
           ),
         ),
         iconTheme: WidgetStateProperty.resolveWith(
@@ -121,7 +121,7 @@ class AppTheme {
             size: 26,
             color: states.contains(WidgetState.selected)
                 ? AppColors.ink
-                : const Color(0xFF6B6978),
+                : const Color(0xFF5E6F6C),
           ),
         ),
       ),
