@@ -52,19 +52,12 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  // ---- Action needed (gradient highlight card) ----
+  // ---- Action needed (soft sage hero card) ----
   Widget _actionNeeded(int reminders, int todos) => Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          gradient: AppColors.actionGradient,
+          color: AppColors.accentSoft,
           borderRadius: BorderRadius.circular(AppTheme.radius),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.ink.withValues(alpha: 0.28),
-              blurRadius: 22,
-              offset: const Offset(0, 10),
-            ),
-          ],
         ),
         child: Row(
           children: [
@@ -74,29 +67,27 @@ class DashboardScreen extends StatelessWidget {
                 children: [
                   const Text('Action needed',
                       style: TextStyle(
-                          color: Colors.white,
+                          color: AppColors.ink,
                           fontSize: 19,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.3)),
                   const SizedBox(height: 5),
                   Text(
                     '$reminders reminders · $todos to-dos',
-                    style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.72),
-                        fontSize: 14),
+                    style: const TextStyle(color: AppColors.slate, fontSize: 14),
                   ),
                 ],
               ),
             ),
             Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.14),
+              width: 40,
+              height: 40,
+              decoration: const BoxDecoration(
+                color: AppColors.accent,
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.arrow_forward,
-                  color: Colors.white, size: 18),
+                  color: Colors.white, size: 19),
             ),
           ],
         ),
@@ -221,7 +212,7 @@ class DashboardScreen extends StatelessWidget {
         onTap: () => _addTxn(context),
         child: const Text('+ Add',
             style: TextStyle(
-                color: AppColors.seed, fontWeight: FontWeight.w700)),
+                color: AppColors.accent, fontWeight: FontWeight.w700)),
       ),
       child: Column(
         children: [
@@ -489,10 +480,10 @@ class DashboardScreen extends StatelessWidget {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: AppColors.ink.withValues(alpha: 0.06),
+                    color: AppColors.accentSoft,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(icon, size: 18, color: AppColors.ink),
+                  child: Icon(icon, size: 18, color: AppColors.accent),
                 ),
                 const SizedBox(width: 10),
                 Text(title,
