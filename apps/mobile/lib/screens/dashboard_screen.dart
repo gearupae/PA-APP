@@ -52,12 +52,19 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  // ---- Action needed (black card) ----
+  // ---- Action needed (gradient highlight card) ----
   Widget _actionNeeded(int reminders, int todos) => Container(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.ink,
+          gradient: AppColors.actionGradient,
           borderRadius: BorderRadius.circular(AppTheme.radius),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.ink.withValues(alpha: 0.28),
+              blurRadius: 22,
+              offset: const Offset(0, 10),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -68,17 +75,29 @@ class DashboardScreen extends StatelessWidget {
                   const Text('Action needed',
                       style: TextStyle(
                           color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 4),
+                          fontSize: 19,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.3)),
+                  const SizedBox(height: 5),
                   Text(
                     '$reminders reminders · $todos to-dos',
-                    style: const TextStyle(color: Colors.white70, fontSize: 14),
+                    style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.72),
+                        fontSize: 14),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: Colors.white54),
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.14),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.arrow_forward,
+                  color: Colors.white, size: 18),
+            ),
           ],
         ),
       );
@@ -244,25 +263,40 @@ class DashboardScreen extends StatelessWidget {
 
   Widget _stat(String label, double value, Color color) => Expanded(
         child: Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
-            color: AppColors.bg,
-            borderRadius: BorderRadius.circular(14),
+            color: color.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label,
-                  style: TextStyle(color: AppColors.slate, fontSize: 12)),
-              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration:
+                        BoxDecoration(color: color, shape: BoxShape.circle),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(label,
+                      style: TextStyle(
+                          color: AppColors.slate,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600)),
+                ],
+              ),
+              const SizedBox(height: 8),
               FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
                 child: Text(money(value),
-                    style: TextStyle(
-                        fontSize: 18,
+                    style: const TextStyle(
+                        fontSize: 19,
                         fontWeight: FontWeight.w800,
-                        color: color)),
+                        letterSpacing: -0.5,
+                        color: AppColors.ink)),
               ),
             ],
           ),
@@ -437,29 +471,42 @@ class DashboardScreen extends StatelessWidget {
   // ---- helpers ----
   Widget _section(String title, IconData icon,
       {required Widget child, Widget? trailing}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(icon, size: 20, color: AppColors.ink),
-                  const SizedBox(width: 8),
-                  Text(title,
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w700)),
-                  const Spacer(),
-                  if (trailing != null) trailing,
-                ],
-              ),
-              const SizedBox(height: 8),
-              child,
-            ],
-          ),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radius),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: AppColors.ink.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, size: 18, color: AppColors.ink),
+                ),
+                const SizedBox(width: 10),
+                Text(title,
+                    style: const TextStyle(
+                        fontSize: 16.5,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.2)),
+                const Spacer(),
+                if (trailing != null) trailing,
+              ],
+            ),
+            const SizedBox(height: 8),
+            child,
+          ],
         ),
       ),
     );
