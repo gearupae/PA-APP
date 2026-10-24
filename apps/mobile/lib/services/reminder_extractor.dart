@@ -21,6 +21,18 @@ class ReminderExtractor {
     r'\b(renew|renewal|expir(e|es|ing|y)|subscription|validity|recharge)\b',
     caseSensitive: false,
   );
+  // Licences / documents: visa, Emirates ID, passport, driving licence, etc.
+  static final _document = RegExp(
+    r'\b(visa|emirates id|eid|passport|licen[cs]e|permit|registration|mulkiya|'
+    r'certificate|tenancy|ejari|labour card|work permit|id card)\b',
+    caseSensitive: false,
+  );
+  // Maintenance: car service, AC, appliances, warranty.
+  static final _maintenance = RegExp(
+    r'\b(service due|maintenance|oil change|ac service|a/c service|servicing|'
+    r'warranty|inspection|next service|filter change)\b',
+    caseSensitive: false,
+  );
 
   static List<Reminder> extract(List<SmsItem> messages) {
     final out = <Reminder>[];
@@ -33,8 +45,14 @@ class ReminderExtractor {
         kind = ReminderKind.payment;
       } else if (_meeting.hasMatch(lower)) {
         kind = ReminderKind.meeting;
-      } else if (_renewal.hasMatch(lower)) {
-        kind = ReminderKind.payment;
+      } else if (_renewal.hasMatch(lower) ||
+          _document.hasMatch(lower) ||
+          _maintenance.hasMatch(lower)) {
+        // Renewals, licence/document expiry and maintenance are time-bound
+        // "life admin" reminders.
+        kind = _payment.hasMatch(lower)
+            ? ReminderKind.payment
+            : ReminderKind.general;
       }
       if (kind == null) continue;
 
@@ -82,6 +100,8 @@ class ReminderExtractor {
         kind = ReminderKind.meeting;
       } else if (_payment.hasMatch(lower) || _renewal.hasMatch(lower)) {
         kind = ReminderKind.payment;
+      } else if (_document.hasMatch(lower) || _maintenance.hasMatch(lower)) {
+        kind = ReminderKind.general;
       }
       if (kind == null) continue;
       final when = _findWhen(s, base);

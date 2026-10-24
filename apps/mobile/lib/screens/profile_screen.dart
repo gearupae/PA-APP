@@ -77,6 +77,8 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
+          Card(child: _DemoToggle(state: state)),
+          const SizedBox(height: 16),
           Card(
             child: ListTile(
               leading: const Icon(Icons.mark_email_read_outlined,
@@ -114,6 +116,30 @@ class ProfileScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _DemoToggle extends StatefulWidget {
+  const _DemoToggle({required this.state});
+  final AppState state;
+  @override
+  State<_DemoToggle> createState() => _DemoToggleState();
+}
+
+class _DemoToggleState extends State<_DemoToggle> {
+  @override
+  Widget build(BuildContext context) {
+    return SwitchListTile(
+      secondary: const Icon(Icons.science_outlined, color: AppColors.ink),
+      title: const Text('Preview with sample data',
+          style: TextStyle(fontWeight: FontWeight.w600)),
+      subtitle: const Text('See bills, dues, renewals & insights with demo data'),
+      value: widget.state.demoMode,
+      onChanged: (v) async {
+        await widget.state.setDemoMode(v);
+        if (mounted) setState(() {});
+      },
     );
   }
 }
