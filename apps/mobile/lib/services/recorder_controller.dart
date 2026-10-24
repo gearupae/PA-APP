@@ -4,24 +4,18 @@ import 'package:flutter/foundation.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
-import '../models/models.dart';
-import 'note_builder.dart';
 import 'speech_service.dart';
 
 /// Owns the always-ready continuous capture session. Auto-restarts after each
-/// pause so one session is a running transcript; on stop it saves a note
-/// (to-dos + mind map) and extracts reminders. Foreground only.
+/// pause so one session is a running transcript; on stop it hands the
+/// transcript to [onTranscript], which builds + saves the note. Foreground only.
 class RecorderController extends ChangeNotifier {
-  RecorderController({
-    required this.onSaveNote,
-    required this.onReminders,
-  });
+  RecorderController({required this.onTranscript});
 
-  /// Persist a finished note; returns nothing.
-  final Future<void> Function(Note note) onSaveNote;
-
-  /// Persist reminders parsed from a transcript; returns the count.
-  final Future<int> Function(String transcript) onReminders;
+  /// Build + persist a note from the transcript; returns its id and the
+  /// number of reminders created, or null if nothing was saved.
+  final Future<({String id, int reminders})?> Function(String transcript)
+      onTranscript;
 
   final SpeechService _speech = SpeechService();
 
@@ -125,12 +119,12 @@ class RecorderController extends ChangeNotifier {
     elapsed = Duration.zero;
     notifyListeners();
     if (t.isEmpty) return null;
-    final note = NoteBuilder.build(t);
-    await onSaveNote(note);
-    lastReminderCount = await onReminders(t);
-    lastSavedNoteId = note.id;
+    final result = await onTranscript(t);
+    if (result == null) return null;
+    lastReminderCount = result.reminders;
+    lastSavedNoteId = result.id;
     notifyListeners();
-    return note.id;
+    return result.id;
   }
 
   Future<void> cancel() async {

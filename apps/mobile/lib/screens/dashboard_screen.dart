@@ -7,6 +7,7 @@ import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../util/format.dart';
 import '../widgets/donut_chart.dart';
+import 'assistant_screen.dart';
 import 'connect_account_screen.dart';
 import 'morning_brief_screen.dart';
 
@@ -26,6 +27,17 @@ class DashboardScreen extends StatelessWidget {
         return Scaffold(
           appBar: AppBar(
             title: Text(name.isEmpty ? 'Good day' : 'Good day, $name'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.auto_awesome),
+                tooltip: 'Assistant',
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => AssistantScreen(state: state),
+                  ),
+                ),
+              ),
+            ],
           ),
           body: RefreshIndicator(
             onRefresh: state.refreshSms,

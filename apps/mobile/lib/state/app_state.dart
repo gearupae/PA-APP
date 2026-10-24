@@ -2,10 +2,12 @@ import 'package:flutter/foundation.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../models/models.dart';
+import '../services/ai_api.dart';
 import '../services/dues_extractor.dart';
 import '../services/expense_parser.dart';
 import '../services/local_store.dart';
 import '../services/mail_api.dart';
+import '../services/note_builder.dart';
 import '../services/recorder_controller.dart';
 import '../services/reminder_extractor.dart';
 import '../services/signals_api.dart';
@@ -14,10 +16,29 @@ import '../services/sms_service.dart';
 /// App-wide state: data loading, permissions, derived dashboard figures.
 class AppState extends ChangeNotifier {
   AppState(this.store) {
-    recorder = RecorderController(
-      onSaveNote: addNote,
-      onReminders: addRemindersFromText,
-    );
+    recorder = RecorderController(onTranscript: createNoteFromTranscript);
+  }
+
+  /// Build a note from a transcript — GPT-enriched when signed in, with an
+  /// on-device heuristic fallback — then persist it and any reminders.
+  Future<({String id, int reminders})?> createNoteFromTranscript(
+      String transcript) async {
+    final note = NoteBuilder.build(transcript);
+    final analysis = await AiApi(store).analyze(transcript);
+    if (analysis != null) {
+      if (analysis.summary.isNotEmpty) {
+        note.title = analysis.summary.length > 48
+            ? '${analysis.summary.substring(0, 46)}…'
+            : analysis.summary;
+      }
+      if (analysis.todos.isNotEmpty) {
+        note.todos = analysis.todos.map((t) => Todo(text: t)).toList();
+      }
+      if (analysis.promises.isNotEmpty) note.promises = analysis.promises;
+    }
+    await addNote(note);
+    final rc = await addRemindersFromText(transcript);
+    return (id: note.id, reminders: rc);
   }
 
   final LocalStore store;
