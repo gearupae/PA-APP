@@ -5,43 +5,45 @@ import 'package:flutter/services.dart';
 /// red accent for voice, and a calm blue bottom bar. Tuned for a quiet,
 /// high-end feel that's easy to stay in.
 class AppColors {
-  static const seed = Color(0xFF2E6FB7);
-  static const bg = Color(0xFFF4F1EA); // warm paper
+  static const seed = Color(0xFF3B3D44);
+  static const bg = Color(0xFFF2F2F0); // soft neutral light
   static const surface = Colors.white;
-  static const ink = Color(0xFF1A1813); // warm charcoal (headers, text)
-  static const inkSoft = Color(0xFF2E2A22); // for gradients
-  static const red = Color(0xFFD2473D); // voice / record
+  static const ink = Color(0xFF17181C); // cool near-black (headers, text)
+  static const inkSoft = Color(0xFF2B2D34); // for gradients
+  static const red = Color(0xFFD2473D); // voice / record only
 
-  static const navBg = Color(0xFFDEE7ED);
-  static const navPill = Color(0xFFC3DCEF);
-  static const tag = Color(0xFFEBE5D9); // warm grey pill
-  static const line = Color(0xFFE7E1D6); // hairline borders
+  // Dark graphite menu bar — the one strong surface, no colour.
+  static const navBg = Color(0xFF1E1F24);
+  static const navPill = Color(0xFF34363E);
+  static const tag = Color(0xFFECECEA); // neutral grey pill
+  static const line = Color(0xFFE6E6E3); // hairline borders
 
-  static const slate = Color(0xFF807868); // warm muted text
-  static const income = Color(0xFF1FA971);
+  static const slate = Color(0xFF6E7078); // neutral muted text
+  static const income = Color(0xFF2E9E73);
   static const expense = Color(0xFFD2473D);
-  static const violet = Color(0xFF7A5AF0);
-  static const teal = Color(0xFF0FA3A3);
-  static const amber = Color(0xFFD98E00);
+  static const violet = Color(0xFF6E63C6);
+  static const teal = Color(0xFF2E9393);
+  static const amber = Color(0xFFC2891A);
 
+  // Chart categories keep colour (needed to tell series apart), but muted.
   static const categoryColors = <String, Color>{
-    'Food': Color(0xFFE8763A),
-    'Fuel': Color(0xFF3E6DD6),
-    'Bills': Color(0xFF7A5AF0),
-    'Shopping': Color(0xFFD14D8E),
-    'Groceries': Color(0xFF1FA971),
-    'Transport': Color(0xFF0FA3A3),
-    'Entertainment': Color(0xFFD98E00),
-    'Health': Color(0xFFE0524E),
-    'Transfers': Color(0xFF7A8699),
-    'Other': Color(0xFFA8A090),
+    'Food': Color(0xFFD9733F),
+    'Fuel': Color(0xFF4169C9),
+    'Bills': Color(0xFF6E55D6),
+    'Shopping': Color(0xFFC24E86),
+    'Groceries': Color(0xFF2E9E73),
+    'Transport': Color(0xFF2E9393),
+    'Entertainment': Color(0xFFC2891A),
+    'Health': Color(0xFFCF5450),
+    'Transfers': Color(0xFF7A8290),
+    'Other': Color(0xFFA3A199),
   };
 
   static Color forCategory(String c) =>
       categoryColors[c] ?? categoryColors['Other']!;
 
   static const actionGradient =
-      LinearGradient(colors: [Color(0xFF211E18), Color(0xFF3A352B)]);
+      LinearGradient(colors: [Color(0xFF1E1F24), Color(0xFF34363E)]);
 }
 
 class AppTheme {
@@ -108,15 +110,17 @@ class AppTheme {
             fontWeight: states.contains(WidgetState.selected)
                 ? FontWeight.w700
                 : FontWeight.w500,
-            color: AppColors.ink,
+            color: states.contains(WidgetState.selected)
+                ? Colors.white
+                : const Color(0xFF9A9CA3),
           ),
         ),
         iconTheme: WidgetStateProperty.resolveWith(
           (states) => IconThemeData(
             size: 26,
             color: states.contains(WidgetState.selected)
-                ? AppColors.ink
-                : const Color(0xFF6A6456),
+                ? Colors.white
+                : const Color(0xFF9A9CA3),
           ),
         ),
       ),
