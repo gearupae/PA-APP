@@ -26,7 +26,7 @@ class PaApp extends StatelessWidget {
     return MaterialApp(
       title: 'PA-APP',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark(),
+      theme: AppTheme.light(),
       home: RootGate(state: state, store: store),
     );
   }

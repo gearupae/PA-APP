@@ -1,44 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Calm, dark "soft-UI" palette: deep near-black canvas, softly raised dark
-/// cards, one subtle indigo accent, muted coral reserved for recording.
+/// Light, airy palette in the reference style — black header, white cards,
+/// grey pill tags, a soft pastel bottom bar and a red voice button — but in a
+/// fresh soft-lilac/violet colour family instead of blue.
 class AppColors {
-  static const seed = Color(0xFF7C8AE0); // soft indigo (bright for dark)
-  static const bg = Color(0xFF0F1115); // deep canvas
-  static const surface = Color(0xFF181B21); // cards
-  static const surfaceAlt = Color(0xFF22262E); // chips, tiles, inputs, panels
-  static const ink = Color(0xFFECEDF1); // primary text + icons (light)
-  static const inkSoft = Color(0xFFC7CAD2);
+  static const seed = Color(0xFF6E5FC6); // soft violet — drives M3 widgets
+  static const bg = Color(0xFFF5F4F2); // warm off-white canvas
+  static const surface = Colors.white;
+  static const surfaceAlt = Color(0xFFF2F0EB); // tiles, inputs, chips, ring
+  static const ink = Color(0xFF1A1A1E); // header, hero, text, buttons
+  static const inkSoft = Color(0xFF2E2C33);
 
-  static const accent = Color(0xFF7C8AE0); // soft indigo (single accent)
-  static const accentSoft = Color(0xFF242941); // indigo-tinted dark surface
-  static const red = Color(0xFFE07A68); // muted coral — record only
+  static const accent = Color(0xFF6E5FC6); // soft violet (single accent)
+  static const accentSoft = Color(0xFFECEAF8); // violet tint surface
+  static const red = Color(0xFFD2473D); // voice / record
 
-  static const navBg = Color(0xFF15181E);
-  static const navPill = Color(0xFF2B3150);
-  static const tag = Color(0xFF262A32);
-  static const line = Color(0xFF2A2E36);
+  static const navBg = Color(0xFFE9E6F4); // soft lilac bottom bar
+  static const navPill = Color(0xFFD7D0EE); // lilac selected pill
+  static const tag = Color(0xFFECEAE6); // warm grey pill tags
+  static const line = Color(0xFFECE9E4); // light hairline
 
-  static const slate = Color(0xFF9A9EA8); // muted light-grey text
-  static const income = Color(0xFF5CB894);
-  static const expense = Color(0xFFE07A68);
-  static const violet = Color(0xFF9B8EE6);
-  static const teal = Color(0xFF4FB3B3);
-  static const amber = Color(0xFFD9A54A);
+  static const slate = Color(0xFF6E6E76); // muted text
+  static const income = Color(0xFF2E9E73);
+  static const expense = Color(0xFFD2473D);
+  static const violet = Color(0xFF6E5FC6);
+  static const teal = Color(0xFF2E9393);
+  static const amber = Color(0xFFBF8A2E);
 
-  // Chart categories keep colour (needed to separate series), tuned for dark.
   static const categoryColors = <String, Color>{
-    'Food': Color(0xFFE59B63),
-    'Fuel': Color(0xFF7C8AE0),
-    'Bills': Color(0xFF9B8EE6),
-    'Shopping': Color(0xFFDE8FB4),
-    'Groceries': Color(0xFF5CB894),
-    'Transport': Color(0xFF4FB3B3),
-    'Entertainment': Color(0xFFD9A54A),
-    'Health': Color(0xFFE38578),
-    'Transfers': Color(0xFF9199A6),
-    'Other': Color(0xFF8A8F99),
+    'Food': Color(0xFFD9733F),
+    'Fuel': Color(0xFF5A7FC2),
+    'Bills': Color(0xFF6E5FC6),
+    'Shopping': Color(0xFFC24E86),
+    'Groceries': Color(0xFF2E9E73),
+    'Transport': Color(0xFF2E9393),
+    'Entertainment': Color(0xFFBF8A2E),
+    'Health': Color(0xFFCF5450),
+    'Transfers': Color(0xFF8A8A92),
+    'Other': Color(0xFFABABA2),
   };
 
   static Color forCategory(String c) =>
@@ -46,15 +46,11 @@ class AppColors {
 }
 
 class AppTheme {
-  static ThemeData dark() {
+  static ThemeData light() {
     final scheme = ColorScheme.fromSeed(
       seedColor: AppColors.seed,
-      brightness: Brightness.dark,
-    ).copyWith(
-      surface: AppColors.surface,
-      primary: AppColors.accent,
-      onSurface: AppColors.ink,
-    );
+      brightness: Brightness.light,
+    ).copyWith(surface: AppColors.surface, primary: AppColors.accent);
 
     final base = ThemeData(
       useMaterial3: true,
@@ -76,29 +72,30 @@ class AppTheme {
 
     return base.copyWith(
       textTheme: text,
+      // Black header, like the reference.
       appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.bg,
-        surfaceTintColor: Colors.transparent,
-        foregroundColor: AppColors.ink,
+        backgroundColor: AppColors.ink,
+        surfaceTintColor: AppColors.ink,
+        foregroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
         systemOverlayStyle: SystemUiOverlayStyle.light,
         titleTextStyle: TextStyle(
-          color: AppColors.ink,
-          fontSize: 28,
+          color: Colors.white,
+          fontSize: 27,
           fontWeight: FontWeight.w800,
-          letterSpacing: -0.6,
+          letterSpacing: -0.5,
         ),
-        iconTheme: IconThemeData(color: AppColors.ink),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       cardTheme: CardThemeData(
         color: AppColors.surface,
-        elevation: 0,
+        elevation: 6,
+        shadowColor: Colors.black.withValues(alpha: 0.08),
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(28),
-          side: const BorderSide(color: AppColors.line),
+          borderRadius: BorderRadius.circular(26),
         ),
         margin: EdgeInsets.zero,
       ),
@@ -115,22 +112,22 @@ class AppTheme {
                 ? FontWeight.w700
                 : FontWeight.w500,
             color: states.contains(WidgetState.selected)
-                ? AppColors.accent
-                : AppColors.slate,
+                ? AppColors.ink
+                : const Color(0xFF6B6978),
           ),
         ),
         iconTheme: WidgetStateProperty.resolveWith(
           (states) => IconThemeData(
             size: 26,
             color: states.contains(WidgetState.selected)
-                ? AppColors.accent
-                : AppColors.slate,
+                ? AppColors.ink
+                : const Color(0xFF6B6978),
           ),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.accent,
+          backgroundColor: AppColors.ink,
           foregroundColor: Colors.white,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -141,16 +138,20 @@ class AppTheme {
       chipTheme: base.chipTheme.copyWith(
         backgroundColor: AppColors.surfaceAlt,
         selectedColor: AppColors.accent,
-        labelStyle: const TextStyle(color: AppColors.ink),
         side: BorderSide.none,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      switchTheme: base.switchTheme,
     );
   }
 
-  static const radius = 28.0;
+  static const radius = 26.0;
   static const pagePad = EdgeInsets.fromLTRB(16, 8, 16, 24);
 
-  static List<BoxShadow> get cardShadow => const [];
+  static List<BoxShadow> get cardShadow => [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.07),
+          blurRadius: 20,
+          offset: const Offset(0, 8),
+        ),
+      ];
 }

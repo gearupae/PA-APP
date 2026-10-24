@@ -56,8 +56,15 @@ class DashboardScreen extends StatelessWidget {
   Widget _actionNeeded(int reminders, int todos) => Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.accentSoft,
+          color: AppColors.ink,
           borderRadius: BorderRadius.circular(AppTheme.radius),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.ink.withValues(alpha: 0.22),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -67,14 +74,16 @@ class DashboardScreen extends StatelessWidget {
                 children: [
                   const Text('Action needed',
                       style: TextStyle(
-                          color: AppColors.ink,
+                          color: Colors.white,
                           fontSize: 19,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.3)),
                   const SizedBox(height: 5),
                   Text(
                     '$reminders reminders · $todos to-dos',
-                    style: const TextStyle(color: AppColors.slate, fontSize: 14),
+                    style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.72),
+                        fontSize: 14),
                   ),
                 ],
               ),
@@ -82,8 +91,8 @@ class DashboardScreen extends StatelessWidget {
             Container(
               width: 40,
               height: 40,
-              decoration: const BoxDecoration(
-                color: AppColors.accent,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.16),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.arrow_forward,
