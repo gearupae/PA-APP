@@ -18,8 +18,8 @@ class AppColors {
   static const accentSoft = Color(0xFFDCE4EC); // reference blue tint
   static const red = Color(0xFFC0392B); // brick red mic / record (reference)
 
-  static const navBg = Color(0xFFDCE4EC); // soft blue bottom bar (reference)
-  static const navPill = Color(0xFFBDD7EC); // blue selected pill (reference)
+  static const navBg = Colors.white; // clean, simple menu bar
+  static const navPill = Color(0xFFEFEBE3); // barely-there neutral highlight
   static const tag = Color(0xFFE8E6E2); // grey pill tags (reference)
   static const line = Color(0xFFEBE7E0); // light hairline
 
@@ -28,7 +28,7 @@ class AppColors {
   static const income = Color(0xFF3E6FB0); // blue (positive)
   static const expense = Color(0xFFC0392B); // red
   static const violet = Color(0xFF3E6FB0); // remapped -> blue
-  static const teal = Color(0xFF5B6B78); // remapped -> slate
+  static const teal = Color(0xFF9A968D); // remapped -> slate
   static const amber = Color(0xFFC0392B); // remapped -> red (highlight)
 
   // Spending categories as a blue ramp + red + greys (reference palette).
@@ -37,7 +37,7 @@ class AppColors {
     'Fuel': Color(0xFF3E6FB0),
     'Bills': Color(0xFF27496D),
     'Shopping': Color(0xFF6E89B8),
-    'Groceries': Color(0xFF5B6B78),
+    'Groceries': Color(0xFF9A968D),
     'Transport': Color(0xFF93A6C2),
     'Entertainment': Color(0xFFA7B4C6),
     'Health': Color(0xFF8A3028),
@@ -117,7 +117,7 @@ class AppTheme {
                 : FontWeight.w500,
             color: states.contains(WidgetState.selected)
                 ? AppColors.ink
-                : const Color(0xFF5B6B78),
+                : const Color(0xFF9A968D),
           ),
         ),
         iconTheme: WidgetStateProperty.resolveWith(
@@ -125,7 +125,7 @@ class AppTheme {
             size: 26,
             color: states.contains(WidgetState.selected)
                 ? AppColors.ink
-                : const Color(0xFF5B6B78),
+                : const Color(0xFF9A968D),
           ),
         ),
       ),

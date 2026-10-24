@@ -61,11 +61,18 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       ProfileScreen(state: s, onSignedOut: widget.onSignedOut),
     ];
 
+    // Only Reminders (1) and Notes (2) get the + button.
+    VoidCallback? addAction;
+    if (_index == 1) {
+      addAction = () => showAddReminder(context, s);
+    } else if (_index == 2) {
+      addAction = _openRecorder;
+    }
+
     return Scaffold(
       body: IndexedStack(index: _index, children: pages),
-      floatingActionButton: _AddButton(
-        onTap: () => showQuickAdd(context, s, onRecord: _openRecorder),
-      ),
+      floatingActionButton:
+          addAction == null ? null : _AddButton(onTap: addAction),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),
