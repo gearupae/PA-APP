@@ -61,17 +61,6 @@ class LocalStore {
   Future<void> saveNotes(List<Note> notes) =>
       _prefs.setString('notes', jsonEncode(notes.map((n) => n.toJson()).toList()));
 
-  // --- trips ---
-  List<Trip> get trips {
-    final raw = _prefs.getString('trips');
-    if (raw == null) return [];
-    final list = jsonDecode(raw) as List<dynamic>;
-    return list.map((e) => Trip.fromJson(e as Map<String, dynamic>)).toList();
-  }
-
-  Future<void> saveTrips(List<Trip> items) =>
-      _prefs.setString('trips', jsonEncode(items.map((t) => t.toJson()).toList()));
-
   // --- reminders ---
   List<Reminder> get reminders {
     final raw = _prefs.getString('reminders');
