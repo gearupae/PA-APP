@@ -39,9 +39,9 @@ class NotesScreen extends StatelessWidget {
                             horizontal: 16, vertical: 6),
                         leading: CircleAvatar(
                           backgroundColor:
-                              AppColors.violet.withValues(alpha: 0.14),
+                              AppColors.red.withValues(alpha: 0.12),
                           child: const Icon(Icons.description_outlined,
-                              color: AppColors.violet, size: 20),
+                              color: AppColors.red, size: 20),
                         ),
                         title: Text(n.title,
                             maxLines: 1,

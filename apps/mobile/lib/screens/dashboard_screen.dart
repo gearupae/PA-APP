@@ -91,8 +91,8 @@ class DashboardScreen extends StatelessWidget {
             Container(
               width: 40,
               height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.16),
+              decoration: const BoxDecoration(
+                color: AppColors.red,
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.arrow_forward,
