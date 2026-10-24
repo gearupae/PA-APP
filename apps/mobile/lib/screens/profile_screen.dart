@@ -23,8 +23,9 @@ class ProfileScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: AppColors.ink,
+              color: AppColors.accentSoft,
               borderRadius: BorderRadius.circular(AppTheme.radius),
+              border: Border.all(color: AppColors.line),
             ),
             child: Row(
               children: [

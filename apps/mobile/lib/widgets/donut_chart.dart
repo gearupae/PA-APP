@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../theme/app_theme.dart';
+
 class DonutSlice {
   DonutSlice(this.label, this.value, this.color);
   final String label;
@@ -40,11 +42,13 @@ class DonutChart extends StatelessWidget {
               if (centerTop != null)
                 Text(centerTop!,
                     style: const TextStyle(
-                        fontSize: 12, color: Color(0xFF64748B))),
+                        fontSize: 12, color: AppColors.slate)),
               if (centerBottom != null)
                 Text(centerBottom!,
                     style: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.w800)),
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.ink)),
             ],
           ),
         ),
@@ -68,7 +72,7 @@ class _DonutPainter extends CustomPainter {
     final bg = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke
-      ..color = const Color(0xFFEEF1F6);
+      ..color = AppColors.surfaceAlt;
     canvas.drawCircle(center, radius, bg);
 
     if (total <= 0) return;

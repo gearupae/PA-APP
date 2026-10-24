@@ -85,7 +85,7 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.ink,
+      backgroundColor: AppColors.bg,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -108,8 +108,9 @@ class _AuthScreenState extends State<AuthScreen> {
                 Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.surface,
                     borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: AppColors.line),
                   ),
                   child: Column(
                     children: [
@@ -218,7 +219,7 @@ class _AuthScreenState extends State<AuthScreen> {
         labelText: label,
         prefixIcon: Icon(icon),
         filled: true,
-        fillColor: AppColors.bg,
+        fillColor: AppColors.surfaceAlt,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,

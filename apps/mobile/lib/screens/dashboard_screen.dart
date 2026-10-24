@@ -96,13 +96,13 @@ class DashboardScreen extends StatelessWidget {
   Widget _smsPrompt() => Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppTheme.radius),
-          border: Border.all(color: AppColors.tag),
+          border: Border.all(color: AppColors.line),
         ),
         child: Row(
           children: [
-            const Icon(Icons.sms_outlined, color: AppColors.ink),
+            const Icon(Icons.sms_outlined, color: AppColors.accent),
             const SizedBox(width: 12),
             const Expanded(
               child: Text(
@@ -256,7 +256,7 @@ class DashboardScreen extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.08),
+            color: AppColors.surfaceAlt,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
@@ -467,6 +467,7 @@ class DashboardScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppTheme.radius),
+        border: Border.all(color: AppColors.line),
         boxShadow: AppTheme.cardShadow,
       ),
       child: Padding(

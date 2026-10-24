@@ -22,7 +22,7 @@ class RemindersLocalScreen extends StatelessWidget {
           floatingActionButton: Padding(
             padding: const EdgeInsets.only(bottom: 72),
             child: FloatingActionButton.extended(
-              backgroundColor: AppColors.ink,
+              backgroundColor: AppColors.accent,
               foregroundColor: Colors.white,
               onPressed: () => _add(context),
               icon: const Icon(Icons.add_alarm),
@@ -112,12 +112,13 @@ class RemindersLocalScreen extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.line),
         ),
         child: ListTile(
           leading: CircleAvatar(
-            backgroundColor: _kindColor(r.kind).withValues(alpha: 0.14),
+            backgroundColor: _kindColor(r.kind).withValues(alpha: 0.18),
             child: Icon(_kindIcon(r.kind), color: _kindColor(r.kind), size: 20),
           ),
           title: Text(

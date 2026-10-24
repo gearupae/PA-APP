@@ -105,12 +105,9 @@ class MindMapView extends StatelessWidget {
         width: nodeW,
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surfaceAlt,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.5), width: 1.5),
-          boxShadow: const [
-            BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))
-          ],
+          border: Border.all(color: color.withValues(alpha: 0.6), width: 1.5),
         ),
         child: Text(
           label,

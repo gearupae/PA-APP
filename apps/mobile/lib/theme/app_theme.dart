@@ -1,44 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Calm, airy "soft-UI" palette: near-white canvas, large rounded white cards,
-/// one subtle sage-green accent, muted coral reserved for recording. Tuned for
-/// a low-stress, high-end finance feel.
+/// Calm, dark "soft-UI" palette: deep near-black canvas, softly raised dark
+/// cards, one subtle indigo accent, muted coral reserved for recording.
 class AppColors {
-  static const seed = Color(0xFF5D6CB0); // soft indigo — drives M3 widgets
-  static const bg = Color(0xFFF6F7FA); // near-white canvas (cool)
-  static const surface = Colors.white;
-  static const ink = Color(0xFF20232B); // soft near-black
-  static const inkSoft = Color(0xFF2E343A);
+  static const seed = Color(0xFF7C8AE0); // soft indigo (bright for dark)
+  static const bg = Color(0xFF0F1115); // deep canvas
+  static const surface = Color(0xFF181B21); // cards
+  static const surfaceAlt = Color(0xFF22262E); // chips, tiles, inputs, panels
+  static const ink = Color(0xFFECEDF1); // primary text + icons (light)
+  static const inkSoft = Color(0xFFC7CAD2);
 
-  static const accent = Color(0xFF5D6CB0); // soft indigo (single accent)
-  static const accentSoft = Color(0xFFECEEF8); // indigo tint surface
-  static const red = Color(0xFFCC6B5A); // muted coral — record only
+  static const accent = Color(0xFF7C8AE0); // soft indigo (single accent)
+  static const accentSoft = Color(0xFF242941); // indigo-tinted dark surface
+  static const red = Color(0xFFE07A68); // muted coral — record only
 
-  static const navBg = Colors.white;
-  static const navPill = Color(0xFFECEEF8);
-  static const tag = Color(0xFFEDEEF2);
-  static const line = Color(0xFFE9EBF0);
+  static const navBg = Color(0xFF15181E);
+  static const navPill = Color(0xFF2B3150);
+  static const tag = Color(0xFF262A32);
+  static const line = Color(0xFF2A2E36);
 
-  static const slate = Color(0xFF747880);
-  static const income = Color(0xFF4E9E7E);
-  static const expense = Color(0xFFCC6B5A);
-  static const violet = Color(0xFF6E63C6);
-  static const teal = Color(0xFF2E9393);
-  static const amber = Color(0xFFBF8A2E);
+  static const slate = Color(0xFF9A9EA8); // muted light-grey text
+  static const income = Color(0xFF5CB894);
+  static const expense = Color(0xFFE07A68);
+  static const violet = Color(0xFF9B8EE6);
+  static const teal = Color(0xFF4FB3B3);
+  static const amber = Color(0xFFD9A54A);
 
-  // Chart categories keep colour (needed to separate series), gently muted.
+  // Chart categories keep colour (needed to separate series), tuned for dark.
   static const categoryColors = <String, Color>{
-    'Food': Color(0xFFD08A4F),
-    'Fuel': Color(0xFF5A7FC2),
-    'Bills': Color(0xFF8A7BC8),
-    'Shopping': Color(0xFFC77BA0),
-    'Groceries': Color(0xFF5F8575),
-    'Transport': Color(0xFF4E9A9A),
-    'Entertainment': Color(0xFFC2993E),
-    'Health': Color(0xFFCE7369),
-    'Transfers': Color(0xFF8A9199),
-    'Other': Color(0xFFABABA2),
+    'Food': Color(0xFFE59B63),
+    'Fuel': Color(0xFF7C8AE0),
+    'Bills': Color(0xFF9B8EE6),
+    'Shopping': Color(0xFFDE8FB4),
+    'Groceries': Color(0xFF5CB894),
+    'Transport': Color(0xFF4FB3B3),
+    'Entertainment': Color(0xFFD9A54A),
+    'Health': Color(0xFFE38578),
+    'Transfers': Color(0xFF9199A6),
+    'Other': Color(0xFF8A8F99),
   };
 
   static Color forCategory(String c) =>
@@ -46,11 +46,15 @@ class AppColors {
 }
 
 class AppTheme {
-  static ThemeData light() {
+  static ThemeData dark() {
     final scheme = ColorScheme.fromSeed(
       seedColor: AppColors.seed,
-      brightness: Brightness.light,
-    ).copyWith(surface: AppColors.surface, primary: AppColors.accent);
+      brightness: Brightness.dark,
+    ).copyWith(
+      surface: AppColors.surface,
+      primary: AppColors.accent,
+      onSurface: AppColors.ink,
+    );
 
     final base = ThemeData(
       useMaterial3: true,
@@ -72,7 +76,6 @@ class AppTheme {
 
     return base.copyWith(
       textTheme: text,
-      // Airy light header — part of the canvas, dark status icons.
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.bg,
         surfaceTintColor: Colors.transparent,
@@ -80,7 +83,7 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        systemOverlayStyle: SystemUiOverlayStyle.dark,
+        systemOverlayStyle: SystemUiOverlayStyle.light,
         titleTextStyle: TextStyle(
           color: AppColors.ink,
           fontSize: 28,
@@ -91,11 +94,11 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: AppColors.surface,
-        elevation: 7,
-        shadowColor: Colors.black.withValues(alpha: 0.07),
+        elevation: 0,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(28),
+          side: const BorderSide(color: AppColors.line),
         ),
         margin: EdgeInsets.zero,
       ),
@@ -103,8 +106,7 @@ class AppTheme {
         backgroundColor: AppColors.navBg,
         surfaceTintColor: Colors.transparent,
         indicatorColor: AppColors.navPill,
-        elevation: 10,
-        shadowColor: Colors.black.withValues(alpha: 0.06),
+        elevation: 0,
         height: 76,
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => TextStyle(
@@ -128,7 +130,7 @@ class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.ink,
+          backgroundColor: AppColors.accent,
           foregroundColor: Colors.white,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -137,22 +139,18 @@ class AppTheme {
         ),
       ),
       chipTheme: base.chipTheme.copyWith(
-        backgroundColor: AppColors.tag,
+        backgroundColor: AppColors.surfaceAlt,
         selectedColor: AppColors.accent,
+        labelStyle: const TextStyle(color: AppColors.ink),
         side: BorderSide.none,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
+      switchTheme: base.switchTheme,
     );
   }
 
   static const radius = 28.0;
   static const pagePad = EdgeInsets.fromLTRB(16, 8, 16, 24);
 
-  static List<BoxShadow> get cardShadow => [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.06),
-          blurRadius: 20,
-          offset: const Offset(0, 8),
-        ),
-      ];
+  static List<BoxShadow> get cardShadow => const [];
 }
