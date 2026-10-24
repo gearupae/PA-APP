@@ -143,6 +143,65 @@ class Note {
       );
 }
 
+class Flight {
+  Flight({
+    required this.code,
+    required this.from,
+    required this.to,
+    required this.departsAt,
+  });
+  final String code; // e.g. EK523
+  final String from; // DXB
+  final String to; // BOM
+  final DateTime departsAt;
+
+  Map<String, dynamic> toJson() => {
+        'code': code,
+        'from': from,
+        'to': to,
+        'departsAt': departsAt.toIso8601String(),
+      };
+  factory Flight.fromJson(Map<String, dynamic> j) => Flight(
+        code: j['code'] as String,
+        from: j['from'] as String? ?? '',
+        to: j['to'] as String? ?? '',
+        departsAt: DateTime.parse(j['departsAt'] as String),
+      );
+}
+
+class Trip {
+  Trip({
+    required this.id,
+    required this.destination,
+    required this.start,
+    required this.end,
+    required this.flights,
+  });
+
+  final String id;
+  String destination;
+  DateTime start;
+  DateTime end;
+  List<Flight> flights;
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'destination': destination,
+        'start': start.toIso8601String(),
+        'end': end.toIso8601String(),
+        'flights': flights.map((f) => f.toJson()).toList(),
+      };
+  factory Trip.fromJson(Map<String, dynamic> j) => Trip(
+        id: j['id'] as String,
+        destination: j['destination'] as String,
+        start: DateTime.parse(j['start'] as String),
+        end: DateTime.parse(j['end'] as String),
+        flights: (j['flights'] as List<dynamic>? ?? [])
+            .map((f) => Flight.fromJson(f as Map<String, dynamic>))
+            .toList(),
+      );
+}
+
 enum ReminderKind { payment, meeting, general }
 
 class Reminder {

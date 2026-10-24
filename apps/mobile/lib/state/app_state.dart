@@ -53,6 +53,7 @@ class AppState extends ChangeNotifier {
   List<Txn> txns = []; // parsed (from SMS) + manual, with overrides applied
   List<Note> notes = [];
   List<Reminder> reminders = [];
+  List<Trip> trips = [];
 
   // Email (populated from the backend when an account is connected).
   List<MailMessage> importantEmails = [];
@@ -66,6 +67,7 @@ class AppState extends ChangeNotifier {
     notes = store.notes;
     reminders = store.reminders;
     reminders.sort((a, b) => a.dueAt.compareTo(b.dueAt));
+    trips = store.trips;
     smsGranted = await Permission.sms.isGranted;
     _applyMessages();
     notifyListeners();
@@ -328,11 +330,71 @@ class AppState extends ChangeNotifier {
         .toList();
   }
 
-  /// All reminders (manual + auto from SMS + from email), sorted by due date.
+  /// All reminders (manual + auto from SMS/email + flight departures).
   List<Reminder> get allReminders {
-    final list = [...reminders, ...autoReminders, ...emailReminders]
-      ..sort((a, b) => a.dueAt.compareTo(b.dueAt));
+    final list = [
+      ...reminders,
+      ...autoReminders,
+      ...emailReminders,
+      ...flightReminders,
+    ]..sort((a, b) => a.dueAt.compareTo(b.dueAt));
     return list;
+  }
+
+  // ---- Travel ----
+  Future<void> addTrip(Trip t) async {
+    trips = [...trips, t]..sort((a, b) => a.start.compareTo(b.start));
+    await store.saveTrips(trips);
+    notifyListeners();
+  }
+
+  Future<void> deleteTrip(String id) async {
+    trips.removeWhere((t) => t.id == id);
+    await store.saveTrips(trips);
+    notifyListeners();
+  }
+
+  /// Persist in-place edits to an existing trip (e.g. added flight).
+  Future<void> persistTrips() async {
+    await store.saveTrips(trips);
+    notifyListeners();
+  }
+
+  /// Transactions (receipts) that fall within a trip's dates.
+  List<Txn> tripTxns(Trip t) {
+    final from = DateTime(t.start.year, t.start.month, t.start.day);
+    final to = DateTime(t.end.year, t.end.month, t.end.day, 23, 59, 59);
+    return txns
+        .where((x) =>
+            !x.isIncome &&
+            !x.date.isBefore(from) &&
+            !x.date.isAfter(to))
+        .toList();
+  }
+
+  double tripSpend(Trip t) =>
+      tripTxns(t).fold(0.0, (s, x) => s + x.amount);
+
+  /// A reminder 3 hours before each upcoming flight.
+  List<Reminder> get flightReminders {
+    final dismissed = store.dismissedAutoReminders;
+    final done = store.doneAutoReminders;
+    final out = <Reminder>[];
+    for (final t in trips) {
+      for (var i = 0; i < t.flights.length; i++) {
+        final f = t.flights[i];
+        if (f.departsAt.isBefore(DateTime.now())) continue;
+        final id = 'auto_flight_${t.id}_$i';
+        if (dismissed.contains(id)) continue;
+        out.add(Reminder(
+          id: id,
+          title: 'Flight ${f.code} ${f.from}→${f.to} departs',
+          dueAt: f.departsAt.subtract(const Duration(hours: 3)),
+          kind: ReminderKind.meeting,
+        )..done = done.contains(id));
+      }
+    }
+    return out;
   }
 
   List<Reminder> get upcomingReminders =>

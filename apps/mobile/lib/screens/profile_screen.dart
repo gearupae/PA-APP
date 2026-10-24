@@ -5,6 +5,7 @@ import '../services/mail_api.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import 'connect_account_screen.dart';
+import 'travel_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key, required this.state, required this.onSignedOut});
@@ -74,6 +75,18 @@ class ProfileScreen extends StatelessWidget {
                     title: 'Notifications',
                     perm: Permission.notification),
               ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.flight_outlined, color: AppColors.ink),
+              title: const Text('Travel',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: const Text('Trips, flights & per-trip spend'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                  builder: (_) => TravelScreen(state: state))),
             ),
           ),
           const SizedBox(height: 16),
