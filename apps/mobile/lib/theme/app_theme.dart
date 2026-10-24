@@ -16,31 +16,33 @@ class AppColors {
 
   static const accent = Color(0xFF3E6FB0); // reference blue (single accent)
   static const accentSoft = Color(0xFFDCE4EC); // reference blue tint
-  static const red = Color(0xFFD13A34); // red mic / record
+  static const red = Color(0xFFC0392B); // brick red mic / record (reference)
 
   static const navBg = Color(0xFFDCE4EC); // soft blue bottom bar (reference)
   static const navPill = Color(0xFFBDD7EC); // blue selected pill (reference)
   static const tag = Color(0xFFE8E6E2); // grey pill tags (reference)
   static const line = Color(0xFFEBE7E0); // light hairline
 
+  // Only the reference palette: black, greys, soft blue, brick red.
   static const slate = Color(0xFF6E6E76); // muted text
-  static const income = Color(0xFF2E9E73);
-  static const expense = Color(0xFFD2473D);
-  static const violet = Color(0xFF6E5FC6);
-  static const teal = Color(0xFF2E9393);
-  static const amber = Color(0xFFBF8A2E);
+  static const income = Color(0xFF3E6FB0); // blue (positive)
+  static const expense = Color(0xFFC0392B); // red
+  static const violet = Color(0xFF3E6FB0); // remapped -> blue
+  static const teal = Color(0xFF5B6B78); // remapped -> slate
+  static const amber = Color(0xFFC0392B); // remapped -> red (highlight)
 
+  // Spending categories as a blue ramp + red + greys (reference palette).
   static const categoryColors = <String, Color>{
-    'Food': Color(0xFFD9733F),
-    'Fuel': Color(0xFF5A7FC2),
-    'Bills': Color(0xFF6E5FC6),
-    'Shopping': Color(0xFFC24E86),
-    'Groceries': Color(0xFF2E9E73),
-    'Transport': Color(0xFF2E9393),
-    'Entertainment': Color(0xFFBF8A2E),
-    'Health': Color(0xFFCF5450),
-    'Transfers': Color(0xFF8A8A92),
-    'Other': Color(0xFFABABA2),
+    'Food': Color(0xFFC0392B),
+    'Fuel': Color(0xFF3E6FB0),
+    'Bills': Color(0xFF27496D),
+    'Shopping': Color(0xFF6E89B8),
+    'Groceries': Color(0xFF5B6B78),
+    'Transport': Color(0xFF93A6C2),
+    'Entertainment': Color(0xFFA7B4C6),
+    'Health': Color(0xFF8A3028),
+    'Transfers': Color(0xFF9199A6),
+    'Other': Color(0xFFB8BEC6),
   };
 
   static Color forCategory(String c) =>

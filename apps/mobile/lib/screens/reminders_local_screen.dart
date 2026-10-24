@@ -19,16 +19,6 @@ class RemindersLocalScreen extends StatelessWidget {
         final done = all.where((r) => r.done).toList();
         return Scaffold(
           appBar: AppBar(title: const Text('Reminders')),
-          floatingActionButton: Padding(
-            padding: const EdgeInsets.only(bottom: 72),
-            child: FloatingActionButton.extended(
-              backgroundColor: AppColors.accent,
-              foregroundColor: Colors.white,
-              onPressed: () => _add(context),
-              icon: const Icon(Icons.add_alarm),
-              label: const Text('New'),
-            ),
-          ),
           body: all.isEmpty
               ? _empty()
               : ListView(
@@ -160,95 +150,6 @@ class RemindersLocalScreen extends StatelessWidget {
             onChanged: (_) => state.toggleReminder(r),
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _add(BuildContext context) async {
-    final titleC = TextEditingController();
-    ReminderKind kind = ReminderKind.payment;
-    DateTime due = DateTime.now().add(const Duration(hours: 1));
-
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setM) => Padding(
-          padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 20,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('New reminder',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-              const SizedBox(height: 16),
-              TextField(
-                controller: titleC,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
-                    labelText: 'What to remember',
-                    prefixIcon: Icon(Icons.edit_outlined)),
-              ),
-              const SizedBox(height: 14),
-              Wrap(
-                spacing: 8,
-                children: ReminderKind.values
-                    .map((k) => ChoiceChip(
-                          label: Text(k.name[0].toUpperCase() +
-                              k.name.substring(1)),
-                          selected: kind == k,
-                          onSelected: (_) => setM(() => kind = k),
-                        ))
-                    .toList(),
-              ),
-              const SizedBox(height: 14),
-              OutlinedButton.icon(
-                icon: const Icon(Icons.calendar_today, size: 18),
-                label: Text('Due: ${dayMonthTime(due)}'),
-                onPressed: () async {
-                  final d = await showDatePicker(
-                    context: ctx,
-                    initialDate: due,
-                    firstDate: DateTime.now().subtract(const Duration(days: 1)),
-                    lastDate: DateTime.now().add(const Duration(days: 730)),
-                  );
-                  if (d == null) return;
-                  if (!ctx.mounted) return;
-                  final t = await showTimePicker(
-                    context: ctx,
-                    initialTime: TimeOfDay.fromDateTime(due),
-                  );
-                  setM(() => due = DateTime(
-                      d.year, d.month, d.day, t?.hour ?? 9, t?.minute ?? 0));
-                },
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () {
-                    if (titleC.text.trim().isEmpty) return;
-                    state.addReminder(Reminder(
-                      id: 'rem_${DateTime.now().millisecondsSinceEpoch}',
-                      title: titleC.text.trim(),
-                      dueAt: due,
-                      kind: kind,
-                    ));
-                    Navigator.pop(ctx);
-                  },
-                  child: const Text('Save reminder'),
-                ),
-              ),
-            ],
           ),
         ),
       ),

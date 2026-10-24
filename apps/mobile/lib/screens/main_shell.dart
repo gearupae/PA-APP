@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../state/app_state.dart';
+import '../theme/app_theme.dart';
+import 'add_actions.dart';
 import 'dashboard_screen.dart';
 import 'notes_screen.dart';
 import 'record_screen.dart';
@@ -61,6 +63,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
 
     return Scaffold(
       body: IndexedStack(index: _index, children: pages),
+      floatingActionButton: _AddButton(
+        onTap: () => showQuickAdd(context, s, onRecord: _openRecorder),
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),
@@ -82,6 +87,38 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
               selectedIcon: Icon(Icons.person),
               label: 'Profile'),
         ],
+      ),
+    );
+  }
+}
+
+/// Consistent red "+" action button, same on every page (reference style).
+class _AddButton extends StatelessWidget {
+  const _AddButton({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 58,
+          height: 58,
+          decoration: BoxDecoration(
+            color: AppColors.red,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.red.withValues(alpha: 0.35),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: const Icon(Icons.add, color: Colors.white, size: 30),
+        ),
       ),
     );
   }
