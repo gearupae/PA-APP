@@ -30,8 +30,6 @@ class LocalStore {
   bool get offlineMode => _prefs.getBool('offlineMode') ?? false;
   Future<void> setOfflineMode(bool v) => _prefs.setBool('offlineMode', v);
 
-  bool get demoMode => _prefs.getBool('demoMode') ?? false;
-  Future<void> setDemoMode(bool v) => _prefs.setBool('demoMode', v);
 
   bool get signedIn => authToken.isNotEmpty || offlineMode;
 

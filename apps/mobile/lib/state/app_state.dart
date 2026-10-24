@@ -54,63 +54,10 @@ class AppState extends ChangeNotifier {
     await loadEmail();
   }
 
-  // Combine device SMS with sample data when preview mode is on.
+  // Real device SMS only — no sample/dummy data.
   void _applyMessages() {
-    messages =
-        store.demoMode ? [..._sampleMessages(), ..._deviceMessages] : _deviceMessages;
+    messages = _deviceMessages;
     _rebuildTxns();
-  }
-
-  bool get demoMode => store.demoMode;
-  Future<void> setDemoMode(bool v) async {
-    await store.setDemoMode(v);
-    _applyMessages();
-    notifyListeners();
-  }
-
-  List<SmsItem> _sampleMessages() {
-    final now = DateTime.now();
-    SmsItem s(String id, String addr, String body, int daysAgo) => SmsItem(
-          id: 'sample_$id',
-          address: addr,
-          body: body,
-          date: now.subtract(Duration(days: daysAgo)),
-          read: true,
-        );
-    String d(int addDays) {
-      final x = now.add(Duration(days: addDays));
-      return '${x.day.toString().padLeft(2, '0')}-'
-          '${x.month.toString().padLeft(2, '0')}-${x.year}';
-    }
-
-    return [
-      // Income + spending (SMS expense tracker)
-      s('1', 'MyBank', 'AED 9500.00 credited to a/c XX1234 - SALARY.', 2),
-      s('2', 'TALABAT',
-          'AED 64.50 debited from a/c XX1234 at TALABAT. Avl bal AED 2350.', 1),
-      s('3', 'ADNOC', 'AED 150.00 spent on Card XX9921 at ADNOC.', 1),
-      s('4', 'CARREFOUR',
-          'AED 232.80 debited on Card XX9921 at CARREFOUR HYPERMARKET.', 3),
-      s('5', 'AMAZON', 'AED 310.00 spent at AMAZON.AE on Card XX9921.', 4),
-      // Duplicate / hidden charge (same merchant + amount billed twice)
-      s('6', 'AMAZON', 'AED 310.00 spent at AMAZON.AE on Card XX9921.', 1),
-      // Bills + renewals
-      s('7', 'DEWA',
-          'Your DEWA bill of AED 410.00 is due on ${d(4)}. Pay to avoid disconnection.',
-          0),
-      s('8', 'Netflix',
-          'Your Netflix subscription of AED 42.00 will renew on ${d(6)}.', 0),
-      // Licence / document expiry
-      s('9', 'ICP',
-          'Your Emirates ID expires on ${d(12)}. Please renew to avoid fines.',
-          0),
-      // Insurance renewal
-      s('10', 'ORIENT',
-          'Your car insurance policy renews on ${d(9)}. Premium AED 1200.00.', 0),
-      // Maintenance reminder
-      s('11', 'AlFuttaim',
-          'Your vehicle service is due on ${d(15)} at Al Futtaim Motors.', 0),
-    ];
   }
 
   // ---- Email: fetch only the useful bits (important mail + subscriptions) ----
